@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { flushSync } from "react-dom";
+import { useState } from "react";
 import EnhancedCircularColorPicker from "./components/color-picker";
 
 export default function ColorPickerDemo() {
@@ -7,37 +6,8 @@ export default function ColorPickerDemo() {
     r: 255,
     g: 100,
     b: 50,
-    a: 0.8,
+    a: 1,
   });
-
-  // Check if the EyeDropper API is available in the user's browser
-  const isEyeDropperSupported = "EyeDropper" in window;
-
-  const pickColorFromScreen = async () => {
-    if (!isEyeDropperSupported) {
-      alert("Your browser doesn't support the EyeDropper API yet.");
-      return;
-    }
-
-    try {
-      const eyeDropper = new window.EyeDropper();
-      const result = await eyeDropper.open(); // This opens the eyedropper
-
-      // The result gives us a hex color, e.g., #RRGGBB
-      const rgb = hexToRgb(result.sRGBHex);
-
-      if (rgb) {
-        // Update our state with the new color, keeping the previous alpha
-        setSelectedColor((prevColor) => ({
-          ...rgb,
-          a: prevColor.a,
-        }));
-      }
-    } catch (e) {
-      // This catch block runs if the user cancels the eyedropper (e.g., by pressing Escape)
-      console.log("EyeDropper cancelled by user.");
-    }
-  };
 
   return (
     <div
@@ -50,48 +20,126 @@ export default function ColorPickerDemo() {
       <div className="max-w-md w-full mx-auto bg-white rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Z Color Picker</h1>
-          <p className="text-gray-500 mt-1">Touch, Pen, and Mouse compatible</p>
+          <p className="text-gray-500 mt-1">Flexible Format API Demo</p>
         </div>
+        {/* Clean Color Picker Library - just the picker + optional eyedropper */}
         <EnhancedCircularColorPicker
           size={280}
           initialColor={selectedColor}
-          onChange={(c) => {
-            console.log("onChange called:", c);
-
-            setSelectedColor({ ...c });
+          formats={["rgba", "hex", "hsl"]}
+          onChange={(color) => {
+            console.log("Selected formats:", color);
+            // color is now: { rgba: {r,g,b,a}, hex: "#ff6432", hsl: {h,s,l} }
+            if ("rgba" in color) {
+              setSelectedColor(color.rgba);
+            }
           }}
           backgroundColor="transparent"
           showBackground={false}
+          showEyedropper={true}
         />
-        {isEyeDropperSupported && (
-          <div className="mt-6">
-            <button
-              onClick={pickColorFromScreen}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.362-3.797z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.362 5.214C14.267 4.502 12.94 4 11.25 4c-1.423 0-2.809.39-4.062 1.134a8.26 8.26 0 002.82 2.802 8.983 8.983 0 013.362-3.797z"
-                />
-              </svg>
-              Pick a Color from Screen
-            </button>
+
+        {/* Parent handles all display logic */}
+        <div className="mt-6 space-y-4">
+          {/* Color Preview */}
+          <div className="flex items-center gap-4">
+            <div
+              className="w-16 h-16 rounded-lg border-2 border-gray-300 shadow-sm flex-shrink-0"
+              style={{
+                backgroundColor: `rgba(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}, ${selectedColor.a})`,
+              }}
+            />
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                Current Color
+              </h3>
+              <div className="text-xs text-gray-600 space-y-1">
+                <div>
+                  RGB: {selectedColor.r}, {selectedColor.g}, {selectedColor.b}
+                </div>
+                <div>Alpha: {selectedColor.a}</div>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* API Examples */}
+          <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700">
+              API Examples
+            </h4>
+            <div className="space-y-3 text-xs">
+              <div>
+                <code className="bg-white px-2 py-1 rounded">
+                  formats={["hex"]}
+                </code>
+                <br />
+                <span className="text-gray-500">→ color = "#ff6432"</span>
+              </div>
+              <div>
+                <code className="bg-white px-2 py-1 rounded">
+                  formats={["rgba", "hex"]}
+                </code>
+                <br />
+                <span className="text-gray-500">
+                  → color = {`{ rgba: {r,g,b,a}, hex: "#..." }`}
+                </span>
+              </div>
+              <div>
+                <code className="bg-white px-2 py-1 rounded">
+                  no formats prop
+                </code>
+                <br />
+                <span className="text-gray-500">
+                  → color = {`{r,g,b,a,h,s,v}`} (default)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Current Color Display */}
+          <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <h4 className="text-sm font-semibold text-gray-700">
+              Current Values
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">HEX:</span>
+                <code className="font-mono text-gray-800">
+                  #{Math.round(selectedColor.r).toString(16).padStart(2, "0")}
+                  {Math.round(selectedColor.g).toString(16).padStart(2, "0")}
+                  {Math.round(selectedColor.b).toString(16).padStart(2, "0")}
+                </code>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">RGBA:</span>
+                <code className="font-mono text-gray-800">
+                  rgba({selectedColor.r}, {selectedColor.g}, {selectedColor.b},{" "}
+                  {selectedColor.a})
+                </code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <input
+          type="color"
+          className="mt-6 w-full h-10 p-0 border-0"
+          value={`#${Math.round(selectedColor.r)
+            .toString(16)
+            .padStart(2, "0")}${Math.round(selectedColor.g)
+            .toString(16)
+            .padStart(2, "0")}${Math.round(selectedColor.b)
+            .toString(16)
+            .padStart(2, "0")}`}
+          onChange={(e) => {
+            const hex = e.target.value;
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            setSelectedColor({ r, g, b, a: selectedColor.a });
+          }}
+          style={{ appearance: "none" }}
+        />
       </div>
     </div>
   );
