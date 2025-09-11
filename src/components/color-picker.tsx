@@ -6,14 +6,92 @@ import React, {
   useMemo,
 } from "react";
 
+// --- TypeScript Interfaces ---
+
+interface RGBColor {
+  r: number;
+  g: number;
+  b: number;
+}
+
+interface HSVColor {
+  h: number;
+  s: number;
+  v: number;
+}
+
+interface HSLColor {
+  h: number;
+  s: number;
+  l: number;
+}
+
+interface RGBAColor extends RGBColor {
+  a: number;
+}
+
+interface HSVAColor extends HSVColor {
+  a: number;
+}
+
+// Available color format types
+type ColorFormatType = "rgba" | "rgb" | "hex" | "hsl" | "hsla" | "hsv" | "hsva";
+
+// Individual format results
+interface ColorFormatResults {
+  rgba: RGBAColor;
+  rgb: RGBColor;
+  hex: string;
+  hsl: HSLColor;
+  hsla: HSLColor & { a: number };
+  hsv: HSVColor;
+  hsva: HSVAColor;
+}
+
+// Dynamic result type based on formats array
+type ColorResult<T extends ColorFormatType[]> = T extends [infer U]
+  ? U extends ColorFormatType
+    ? ColorFormatResults[U]
+    : never
+  : T extends []
+  ? RGBAColor & HSVAColor // Default when no formats specified
+  : { [K in T[number]]: ColorFormatResults[K] };
+
+interface ColorPickerProps<T extends ColorFormatType[] = []> {
+  size?: number;
+  onChange?: (color: ColorResult<T>) => void;
+  initialColor?: RGBAColor;
+  backgroundColor?: string;
+  showBackground?: boolean;
+  backgroundOpacity?: number;
+  showEyedropper?: boolean;
+  formats?: T;
+}
+
+type DragTarget = "color" | "alpha" | null;
+
+// EyeDropper API type declaration
+declare global {
+  interface Window {
+    EyeDropper?: {
+      new (): {
+        open(): Promise<{ sRGBHex: string }>;
+      };
+    };
+  }
+}
+
 // --- Color & Geometry Utilities (Moved outside component for performance) ---
 
-const getDistance = (x1, y1, x2, y2) =>
+const getDistance = (x1: number, y1: number, x2: number, y2: number): number =>
   Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-const getAngle = (x, y, cx, cy) => Math.atan2(y - cy, x - cx);
-const radToDeg = (rad) => ((rad * 180) / Math.PI + 360) % 360;
 
-const hsvToRgb = (h, s, v) => {
+const getAngle = (x: number, y: number, cx: number, cy: number): number =>
+  Math.atan2(y - cy, x - cx);
+
+const radToDeg = (rad: number): number => ((rad * 180) / Math.PI + 360) % 360;
+
+const hsvToRgb = (h: number, s: number, v: number): RGBColor => {
   const c = v * s;
   const hh = h / 60;
   const x = c * (1 - Math.abs((hh % 2) - 1));
@@ -34,7 +112,7 @@ const hsvToRgb = (h, s, v) => {
   };
 };
 
-const rgbToHsv = (r, g, b) => {
+const rgbToHsv = (r: number, g: number, b: number): HSVColor => {
   r /= 255;
   g /= 255;
   b /= 255;
@@ -53,20 +131,20 @@ const rgbToHsv = (r, g, b) => {
   return { h, s, v: max };
 };
 
-const rgbToHex = (r, g, b) => {
-  const toHex = (c) => `0${c.toString(16)}`.slice(-2);
+const rgbToHex = (r: number, g: number, b: number): string => {
+  const toHex = (c: number): string => `0${c.toString(16)}`.slice(-2);
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
 
-const rgbToHsl = (r, g, b) => {
+const rgbToHsl = (r: number, g: number, b: number): HSLColor => {
   r /= 255;
   g /= 255;
   b /= 255;
   const max = Math.max(r, g, b),
     min = Math.min(r, g, b);
   let h = 0,
-    s = 0,
-    l = (max + min) / 2;
+    s = 0;
+  const l = (max + min) / 2;
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -90,92 +168,34 @@ const rgbToHsl = (r, g, b) => {
   };
 };
 
-// --- Helper Components ---
-
-function ColorOutput({ label, value }) {
-  const [copied, setCopied] = useState(false);
-  const copyToClipboard = () => {
-    navigator.clipboard
-      .writeText(value)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      })
-      .catch((err) => console.error("Failed to copy!", err));
-  };
-
-  return (
-    <div className="relative">
-      <label className="text-xs font-semibold text-gray-500 uppercase">
-        {label}
-      </label>
-      <input
-        type="text"
-        readOnly
-        value={value}
-        className="w-full p-2 pr-10 font-mono text-sm bg-gray-100 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-      />
-      <button
-        onClick={copyToClipboard}
-        className="absolute inset-y-0 right-0 flex items-center justify-center w-10 text-gray-500 hover:text-gray-800"
-        title="Copy to clipboard"
-      >
-        {copied ? (
-          <svg
-            className="w-5 h-5 text-green-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
-        ) : (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-        )}
-      </button>
-    </div>
-  );
-}
-
 /**
  * An enhanced, performant, and touch-friendly circular color picker for React.
- * @param {object} props
- * @param {number} [props.size=300] - The size (width and height) of the color picker in pixels.
- * @param {function} [props.onChange] - Callback function that fires when the color changes.
- * @param {{r: number, g: number, b: number, a: number}} [props.initialColor] - The initial color value.
- * @param {string} [props.backgroundColor="#ffffff"] - A CSS color for the picker's background.
- * @param {boolean} [props.showBackground=true] - Whether to display the background color.
- * @param {number} [props.backgroundOpacity=1] - Opacity of the background, from 0 to 1.
+ *
+ * @example
+ * ```tsx
+ * <EnhancedCircularColorPicker
+ *   size={280}
+ *   initialColor={{ r: 255, g: 100, b: 50, a: 0.8 }}
+ *   onChange={(color) => console.log(color)}
+ *   showEyedropper={true}
+ * />
+ * ```
  */
-function EnhancedCircularColorPicker({
+function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
   size = 300,
   onChange,
   initialColor = { r: 255, g: 0, b: 0, a: 1 },
   backgroundColor = "#ffffff",
   showBackground = true,
   backgroundOpacity = 1,
-}) {
-  const canvasRef = useRef(null);
-  const wheelCanvasRef = useRef(null);
+  showEyedropper = false,
+  formats,
+}: ColorPickerProps<T>) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wheelCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [dragTarget, setDragTarget] = useState(null);
+  const [dragTarget, setDragTarget] = useState<DragTarget>(null);
+  const [isEyedropperSupported, setIsEyedropperSupported] = useState(false);
 
   // State is now HSV+A, the "source of truth", for easier manipulation.
   const [color, setColor] = useState(() => {
@@ -217,28 +237,51 @@ function EnhancedCircularColorPicker({
 
   // Pre-draw the color wheel to an offscreen canvas to optimize rendering
   useEffect(() => {
+    const pixelRatio = window.devicePixelRatio || 1;
     const wheelCanvas = document.createElement("canvas");
-    wheelCanvas.width = size;
-    wheelCanvas.height = size;
-    const ctx = wheelCanvas.getContext("2d");
+    const scaledSize = size * pixelRatio;
+    wheelCanvas.width = scaledSize;
+    wheelCanvas.height = scaledSize;
+    const ctx = wheelCanvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
+    // Enable anti-aliasing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.scale(pixelRatio, pixelRatio);
+
+    // Create smooth color wheel using ImageData with anti-aliasing
     const imageData = ctx.createImageData(size, size);
     const data = imageData.data;
+
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         const distance = getDistance(x, y, centerX, centerY);
         const idx = (y * size + x) * 4;
+
         if (distance <= wheelRadius) {
           const angle = getAngle(x, y, centerX, centerY);
           const hue = radToDeg(angle);
-          const saturation = distance / wheelRadius;
+          const saturation = Math.min(1, distance / wheelRadius);
           const { r, g, b } = hsvToRgb(hue, saturation, 1);
+
+          // Add anti-aliasing at the edge
+          let alpha = 255;
+          if (distance > wheelRadius - 1) {
+            alpha = Math.max(0, 255 * (wheelRadius - distance));
+          }
+
           data[idx] = r;
           data[idx + 1] = g;
           data[idx + 2] = b;
-          data[idx + 3] = 255;
+          data[idx + 3] = alpha;
+        } else {
+          // Transparent outside the wheel
+          data[idx + 3] = 0;
         }
       }
     }
+
     ctx.putImageData(imageData, 0, 0);
     wheelCanvasRef.current = wheelCanvas;
   }, [size, centerX, centerY, wheelRadius]);
@@ -246,9 +289,17 @@ function EnhancedCircularColorPicker({
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, size, size);
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
 
+    // Enable anti-aliasing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+
+    const pixelRatio = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.clearRect(0, 0, size, size);
     if (showBackground) {
       ctx.fillStyle = backgroundColor;
       ctx.globalAlpha = backgroundOpacity;
@@ -260,9 +311,15 @@ function EnhancedCircularColorPicker({
       ctx.drawImage(wheelCanvasRef.current, 0, 0);
     }
 
-    // Draw Alpha Ring using a thick, stroked arc for better performance
-    const ringRadius = (alphaInnerRadius + alphaOuterRadius) / 2;
-    const ringWidth = alphaOuterRadius - alphaInnerRadius;
+    // Draw Alpha Ring with smooth edges
+    ctx.save();
+
+    // Create clipping mask for alpha ring
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, alphaOuterRadius, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, alphaInnerRadius, 0, 2 * Math.PI, true);
+    ctx.clip();
+
     const gradient = ctx.createConicGradient(-Math.PI / 2, centerX, centerY);
     gradient.addColorStop(
       0,
@@ -274,12 +331,13 @@ function EnhancedCircularColorPicker({
     );
 
     ctx.beginPath();
-    ctx.arc(centerX, centerY, ringRadius, 0, 2 * Math.PI);
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = ringWidth;
-    ctx.stroke();
+    ctx.arc(centerX, centerY, alphaOuterRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = gradient;
+    ctx.fill();
 
-    const drawIndicator = (x, y) => {
+    ctx.restore();
+
+    const drawIndicator = (x: number, y: number) => {
       ctx.beginPath();
       ctx.arc(x, y, 6, 0, 2 * Math.PI);
       ctx.fillStyle = "#fff";
@@ -297,10 +355,13 @@ function EnhancedCircularColorPicker({
     );
 
     const alphaAngle = (1 - color.a) * 2 * Math.PI - Math.PI / 2;
+    const ringRadius = (alphaInnerRadius + alphaOuterRadius) / 2;
     drawIndicator(
       centerX + ringRadius * Math.cos(alphaAngle),
       centerY + ringRadius * Math.sin(alphaAngle)
     );
+
+    ctx.restore();
   }, [
     size,
     color,
@@ -315,29 +376,83 @@ function EnhancedCircularColorPicker({
     backgroundOpacity,
   ]);
 
+  // Setup high-DPI canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const pixelRatio = window.devicePixelRatio || 1;
+    canvas.width = size * pixelRatio;
+    canvas.height = size * pixelRatio;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+  }, [size]);
+
   useEffect(() => {
     drawCanvas();
   }, [drawCanvas]);
 
   const triggerOnChange = useCallback(
-    (newColor) => {
+    (newColor: HSVAColor) => {
       const { r, g, b } = hsvToRgb(newColor.h, newColor.s, newColor.v);
-      onChange?.({ ...newColor, r, g, b });
+      const { h: hslH, s: hslS, l: hslL } = rgbToHsl(r, g, b);
+
+      // Build available format results
+      const formatResults: ColorFormatResults = {
+        rgba: { r, g, b, a: newColor.a },
+        rgb: { r, g, b },
+        hex: rgbToHex(r, g, b),
+        hsl: { h: hslH, s: hslS, l: hslL },
+        hsla: { h: hslH, s: hslS, l: hslL, a: newColor.a },
+        hsv: {
+          h: Math.round(newColor.h),
+          s: Math.round(newColor.s * 100),
+          v: Math.round(newColor.v * 100),
+        },
+        hsva: {
+          h: Math.round(newColor.h),
+          s: Math.round(newColor.s * 100),
+          v: Math.round(newColor.v * 100),
+          a: newColor.a,
+        },
+      };
+
+      // Return data based on formats prop
+      if (!formats || formats.length === 0) {
+        // Default: return RGBA + HSVA merged object (backward compatibility)
+        onChange?.({ ...newColor, r, g, b } as ColorResult<T>);
+      } else if (formats.length === 1) {
+        // Single format: return direct value
+        const format = formats[0];
+        onChange?.(formatResults[format] as ColorResult<T>);
+      } else {
+        // Multiple formats: return object with requested formats
+        const result = {} as Record<string, unknown>;
+        formats.forEach((format) => {
+          result[format] = formatResults[format];
+        });
+        onChange?.(result as ColorResult<T>);
+      }
     },
-    [onChange]
+    [onChange, formats]
   );
 
-  const getPointerPosition = useCallback((e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  }, []);
+  const getPointerPosition = useCallback(
+    (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
+      const clientX =
+        "touches" in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const clientY =
+        "touches" in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    },
+    []
+  );
 
   const updateColorFromPosition = useCallback(
-    (x, y) => {
+    (x: number, y: number) => {
       const distance = getDistance(x, y, centerX, centerY);
       const angle = getAngle(x, y, centerX, centerY);
       const hue = radToDeg(angle);
@@ -350,7 +465,7 @@ function EnhancedCircularColorPicker({
   );
 
   const updateAlphaFromPosition = useCallback(
-    (x, y) => {
+    (x: number, y: number) => {
       let angle = getAngle(x, y, centerX, centerY) + Math.PI / 2;
       if (angle < 0) angle += 2 * Math.PI;
       const alpha = Math.max(0, Math.min(1, 1 - angle / (2 * Math.PI)));
@@ -362,7 +477,7 @@ function EnhancedCircularColorPicker({
   );
 
   const handlePointerDown = useCallback(
-    (e) => {
+    (e: React.MouseEvent | React.TouchEvent) => {
       const { x, y } = getPointerPosition(e);
       const distance = getDistance(x, y, centerX, centerY);
       if (distance <= wheelRadius) {
@@ -388,9 +503,9 @@ function EnhancedCircularColorPicker({
   );
 
   const handlePointerMove = useCallback(
-    (e) => {
+    (e: MouseEvent | TouchEvent) => {
       if (!isDragging) return;
-      if (e.cancelable) e.preventDefault();
+      if ("cancelable" in e && e.cancelable) e.preventDefault();
       const { x, y } = getPointerPosition(e);
       if (dragTarget === "color") {
         updateColorFromPosition(x, y);
@@ -429,12 +544,44 @@ function EnhancedCircularColorPicker({
     }
   }, [isDragging, handlePointerMove, handlePointerUp]);
 
+  // Check for EyeDropper API support
+  useEffect(() => {
+    setIsEyedropperSupported("EyeDropper" in window);
+  }, []);
+
+  // Eyedropper functionality
+  const handleEyedropper = useCallback(async () => {
+    if (!("EyeDropper" in window)) {
+      console.warn("EyeDropper API is not supported in this browser");
+      return;
+    }
+
+    try {
+      const eyeDropper = new window.EyeDropper!();
+      const result = await eyeDropper.open();
+
+      // Parse the hex color to RGB
+      const hex = result.sRGBHex;
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+
+      // Convert RGB to HSV and update color
+      const hsv = rgbToHsv(r, g, b);
+      const newColor = { ...hsv, a: color.a };
+      setColor(newColor);
+      triggerOnChange(newColor);
+    } catch {
+      // User cancelled the eyedropper
+      console.log("Eyedropper cancelled");
+    }
+  }, [color.a, triggerOnChange]);
+
   return (
     <div className="flex flex-col items-center gap-4">
+      {/* Core Color Picker */}
       <canvas
         ref={canvasRef}
-        width={size}
-        height={size}
         className="rounded-full shadow-lg"
         style={{
           cursor: isDragging ? "grabbing" : "grab",
@@ -443,17 +590,35 @@ function EnhancedCircularColorPicker({
         onMouseDown={handlePointerDown}
         onTouchStart={handlePointerDown}
       />
-      <div className="flex items-center gap-4 w-full">
-        <div
-          className="w-16 h-16 rounded-lg border-2 border-gray-300 shadow-sm flex-shrink-0"
-          style={{ backgroundColor: derivedColors.rgbaString }}
-        />
-        <div className="w-full space-y-2">
-          <ColorOutput label="HEX" value={derivedColors.hex} />
-          <ColorOutput label="RGBA" value={derivedColors.rgbaString} />
-          <ColorOutput label="HSLA" value={derivedColors.hslaString} />
-        </div>
-      </div>
+
+      {/* Optional Eyedropper Tool */}
+      {showEyedropper && isEyedropperSupported && (
+        <button
+          onClick={handleEyedropper}
+          className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md group"
+          title="Pick color from screen"
+        >
+          <svg
+            className="w-5 h-5 text-gray-600 group-hover:text-gray-800"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
