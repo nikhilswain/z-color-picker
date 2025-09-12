@@ -6,8 +6,6 @@ import React, {
   useMemo,
 } from "react";
 
-// --- TypeScript Interfaces ---
-
 interface RGBColor {
   r: number;
   g: number;
@@ -65,10 +63,14 @@ interface ColorPickerProps<T extends ColorFormatType[] = []> {
   showBackground?: boolean;
   backgroundOpacity?: number;
   showEyedropper?: boolean;
+  showValueSlider?: boolean;
+  showBrightnessBar?: boolean;
+  showColorRings?: boolean;
+  colorRingsPalette?: string[];
   formats?: T;
 }
 
-type DragTarget = "color" | "alpha" | null;
+type DragTarget = "color" | "alpha" | "value" | null;
 
 // EyeDropper API type declaration
 declare global {
@@ -80,8 +82,6 @@ declare global {
     };
   }
 }
-
-// --- Color & Geometry Utilities (Moved outside component for performance) ---
 
 const getDistance = (x1: number, y1: number, x2: number, y2: number): number =>
   Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
@@ -168,6 +168,24 @@ const rgbToHsl = (r: number, g: number, b: number): HSLColor => {
   };
 };
 
+// Default preset color palette with black/white first and fewer total colors
+const DEFAULT_COLOR_PALETTE = [
+  "#000000",
+  "#FFFFFF",
+  "#FF0000",
+  "#FF8000",
+  "#FFFF00",
+  "#80FF00",
+  "#00FF00",
+  "#00FFFF",
+  "#0080FF",
+  "#0000FF",
+  "#8000FF",
+  "#FF00FF",
+  "#FF0080",
+  "#808080",
+];
+
 /**
  * An enhanced, performant, and touch-friendly circular color picker for React.
  *
@@ -178,6 +196,8 @@ const rgbToHsl = (r: number, g: number, b: number): HSLColor => {
  *   initialColor={{ r: 255, g: 100, b: 50, a: 0.8 }}
  *   onChange={(color) => console.log(color)}
  *   showEyedropper={true}
+ *   showBrightnessBar={true}
+ *   showColorRings={true}
  * />
  * ```
  */
@@ -189,6 +209,10 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
   showBackground = true,
   backgroundOpacity = 1,
   showEyedropper = false,
+  showValueSlider = false,
+  showBrightnessBar = false,
+  showColorRings = false,
+  colorRingsPalette = DEFAULT_COLOR_PALETTE,
   formats,
 }: ColorPickerProps<T>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -208,17 +232,31 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
   });
 
   // Layout constants are memoized to prevent recalculations
-  const { centerX, centerY, wheelRadius, alphaInnerRadius, alphaOuterRadius } =
-    useMemo(
-      () => ({
-        centerX: size / 2,
-        centerY: size / 2,
-        wheelRadius: size * 0.35,
-        alphaInnerRadius: size * 0.35 + 15,
-        alphaOuterRadius: size / 2 - 10,
-      }),
-      [size]
-    );
+  const {
+    centerX,
+    centerY,
+    wheelRadius,
+    alphaInnerRadius,
+    alphaOuterRadius,
+    valueSliderX,
+    valueSliderY,
+    valueSliderWidth,
+    valueSliderHeight,
+  } = useMemo(
+    () => ({
+      centerX: size / 2,
+      centerY: size / 2,
+      wheelRadius: size * 0.35,
+      alphaInnerRadius: size * 0.35 + 15,
+      alphaOuterRadius: size / 2 - 10,
+      // Value slider positioned to the right of the wheel
+      valueSliderX: showValueSlider ? size + 20 : 0,
+      valueSliderY: size * 0.1,
+      valueSliderWidth: showValueSlider ? 30 : 0,
+      valueSliderHeight: showValueSlider ? size * 0.8 : 0,
+    }),
+    [size, showValueSlider]
+  );
 
   // Derived color values are memoized for performance
   const derivedColors = useMemo(() => {
@@ -361,6 +399,62 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       centerY + ringRadius * Math.sin(alphaAngle)
     );
 
+    // Draw Value Slider (if enabled)
+    if (showValueSlider) {
+      ctx.save();
+
+      // Create gradient from current hue/saturation at full brightness to black
+      const gradient = ctx.createLinearGradient(
+        0,
+        valueSliderY,
+        0,
+        valueSliderY + valueSliderHeight
+      );
+      const fullBrightColor = hsvToRgb(color.h, color.s, 1);
+      gradient.addColorStop(
+        0,
+        `rgb(${fullBrightColor.r}, ${fullBrightColor.g}, ${fullBrightColor.b})`
+      );
+      gradient.addColorStop(1, "rgb(0, 0, 0)");
+
+      // Draw slider background
+      ctx.fillStyle = gradient;
+      ctx.fillRect(
+        valueSliderX,
+        valueSliderY,
+        valueSliderWidth,
+        valueSliderHeight
+      );
+
+      // Draw slider border
+      ctx.strokeStyle = "#ccc";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(
+        valueSliderX,
+        valueSliderY,
+        valueSliderWidth,
+        valueSliderHeight
+      );
+
+      // Draw value indicator
+      const valueIndicatorY = valueSliderY + (1 - color.v) * valueSliderHeight;
+      ctx.fillStyle = "#fff";
+      ctx.strokeStyle = "#333";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(
+        valueSliderX + valueSliderWidth / 2,
+        valueIndicatorY,
+        6,
+        0,
+        2 * Math.PI
+      );
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
     ctx.restore();
   }, [
     size,
@@ -374,6 +468,11 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     showBackground,
     backgroundColor,
     backgroundOpacity,
+    showValueSlider,
+    valueSliderX,
+    valueSliderY,
+    valueSliderWidth,
+    valueSliderHeight,
   ]);
 
   // Setup high-DPI canvas
@@ -382,11 +481,14 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     if (!canvas) return;
 
     const pixelRatio = window.devicePixelRatio || 1;
-    canvas.width = size * pixelRatio;
-    canvas.height = size * pixelRatio;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
-  }, [size]);
+    const canvasWidth = showValueSlider ? size + valueSliderWidth + 20 : size;
+    const canvasHeight = size;
+
+    canvas.width = canvasWidth * pixelRatio;
+    canvas.height = canvasHeight * pixelRatio;
+    canvas.style.width = `${canvasWidth}px`;
+    canvas.style.height = `${canvasHeight}px`;
+  }, [size, showValueSlider, valueSliderWidth]);
 
   useEffect(() => {
     drawCanvas();
@@ -476,11 +578,58 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     [centerX, centerY, color, triggerOnChange]
   );
 
+  const updateValueFromPosition = useCallback(
+    (x: number, y: number) => {
+      if (!showValueSlider) return;
+      // Check if click is within value slider bounds
+      if (
+        x >= valueSliderX &&
+        x <= valueSliderX + valueSliderWidth &&
+        y >= valueSliderY &&
+        y <= valueSliderY + valueSliderHeight
+      ) {
+        // Calculate value from y position (top = 1.0, bottom = 0.0)
+        const relativeY = Math.max(
+          0,
+          Math.min(valueSliderHeight, y - valueSliderY)
+        );
+        const value = Math.max(
+          0,
+          Math.min(1, 1 - relativeY / valueSliderHeight)
+        );
+        const newColor = { ...color, v: value };
+        setColor(newColor);
+        triggerOnChange(newColor);
+      }
+    },
+    [
+      showValueSlider,
+      valueSliderX,
+      valueSliderY,
+      valueSliderWidth,
+      valueSliderHeight,
+      color,
+      triggerOnChange,
+    ]
+  );
+
   const handlePointerDown = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       const { x, y } = getPointerPosition(e);
       const distance = getDistance(x, y, centerX, centerY);
-      if (distance <= wheelRadius) {
+
+      // Check value slider first (if enabled)
+      if (
+        showValueSlider &&
+        x >= valueSliderX &&
+        x <= valueSliderX + valueSliderWidth &&
+        y >= valueSliderY &&
+        y <= valueSliderY + valueSliderHeight
+      ) {
+        setIsDragging(true);
+        setDragTarget("value");
+        updateValueFromPosition(x, y);
+      } else if (distance <= wheelRadius) {
         setIsDragging(true);
         setDragTarget("color");
         updateColorFromPosition(x, y);
@@ -497,8 +646,14 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       wheelRadius,
       alphaInnerRadius,
       alphaOuterRadius,
+      showValueSlider,
+      valueSliderX,
+      valueSliderY,
+      valueSliderWidth,
+      valueSliderHeight,
       updateColorFromPosition,
       updateAlphaFromPosition,
+      updateValueFromPosition,
     ]
   );
 
@@ -511,6 +666,8 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
         updateColorFromPosition(x, y);
       } else if (dragTarget === "alpha") {
         updateAlphaFromPosition(x, y);
+      } else if (dragTarget === "value") {
+        updateValueFromPosition(x, y);
       }
     },
     [
@@ -519,6 +676,7 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       getPointerPosition,
       updateColorFromPosition,
       updateAlphaFromPosition,
+      updateValueFromPosition,
     ]
   );
 
@@ -544,80 +702,416 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     }
   }, [isDragging, handlePointerMove, handlePointerUp]);
 
-  // Check for EyeDropper API support
+  // Check for EyeDropper API support (now always supported with fallbacks)
   useEffect(() => {
-    setIsEyedropperSupported("EyeDropper" in window);
+    // Always set to true since we have cross-device fallbacks
+    setIsEyedropperSupported(true);
   }, []);
 
-  // Eyedropper functionality
+  // Cross-device compatible eyedropper functionality
   const handleEyedropper = useCallback(async () => {
-    if (!("EyeDropper" in window)) {
-      console.warn("EyeDropper API is not supported in this browser");
-      return;
+    // Try native EyeDropper API first (Chrome, Edge)
+    if ("EyeDropper" in window) {
+      try {
+        const eyeDropper = new window.EyeDropper!();
+        const result = await eyeDropper.open();
+
+        // Parse the hex color to RGB
+        const hex = result.sRGBHex;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+
+        // Convert RGB to HSV and update color
+        const hsv = rgbToHsv(r, g, b);
+        const newColor = { ...hsv, a: color.a };
+        setColor(newColor);
+        triggerOnChange(newColor);
+        return;
+      } catch {
+        // User cancelled the eyedropper
+        console.log("Native eyedropper cancelled");
+        return;
+      }
     }
 
+    // Fallback: Canvas-based color picking for unsupported browsers
     try {
-      const eyeDropper = new window.EyeDropper!();
-      const result = await eyeDropper.open();
+      // Request screen capture permission
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
 
-      // Parse the hex color to RGB
-      const hex = result.sRGBHex;
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
+      // Create video element to capture screen
+      const video = document.createElement("video");
+      video.srcObject = stream;
+      video.play();
 
-      // Convert RGB to HSV and update color
-      const hsv = rgbToHsv(r, g, b);
-      const newColor = { ...hsv, a: color.a };
-      setColor(newColor);
-      triggerOnChange(newColor);
-    } catch {
-      // User cancelled the eyedropper
-      console.log("Eyedropper cancelled");
+      // Wait for video to load
+      await new Promise((resolve) => {
+        video.onloadedmetadata = resolve;
+      });
+
+      // Create canvas overlay for color picking
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = "0";
+      overlay.style.left = "0";
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.backgroundColor = "rgba(0,0,0,0.3)";
+      overlay.style.cursor = "crosshair";
+      overlay.style.zIndex = "9999";
+      overlay.style.display = "flex";
+      overlay.style.alignItems = "center";
+      overlay.style.justifyContent = "center";
+
+      // Add instructions
+      const instructions = document.createElement("div");
+      instructions.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; max-width: 300px;">
+          <h3 style="margin: 0 0 10px 0;">Color Picker</h3>
+          <p style="margin: 0 0 15px 0;">Move your cursor/pen over any area and click to pick a color</p>
+          <button id="cancel-picker" style="padding: 8px 16px; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+        </div>
+      `;
+      overlay.appendChild(instructions);
+
+      // Create hidden canvas for pixel sampling
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      document.body.appendChild(overlay);
+
+      // Color picking logic with cross-device support
+      const pickColor = (clientX: number, clientY: number) => {
+        // Draw current video frame to canvas
+        ctx?.drawImage(video, 0, 0);
+
+        // Calculate pixel position relative to video
+        const rect = overlay.getBoundingClientRect();
+        const x = Math.floor((clientX / rect.width) * canvas.width);
+        const y = Math.floor((clientY / rect.height) * canvas.height);
+
+        // Get pixel data
+        const imageData = ctx?.getImageData(x, y, 1, 1);
+        if (imageData) {
+          const [r, g, b] = imageData.data;
+
+          // Convert RGB to HSV and update color
+          const hsv = rgbToHsv(r, g, b);
+          const newColor = { ...hsv, a: color.a };
+          setColor(newColor);
+          triggerOnChange(newColor);
+        }
+
+        cleanup();
+      };
+
+      const cleanup = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        document.body.removeChild(overlay);
+      };
+
+      // 4. Keyboard support (Enter to pick center, Escape to cancel)
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          document.removeEventListener("keydown", handleKeyDown);
+          cleanup();
+        } else if (e.key === "Enter") {
+          pickColor(window.innerWidth / 2, window.innerHeight / 2);
+        }
+      };
+
+      const cleanupWithKeyboard = () => {
+        document.removeEventListener("keydown", handleKeyDown);
+        cleanup();
+      };
+
+      // Support multiple input methods
+
+      // 1. Mouse events
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          pickColor(e.clientX, e.clientY);
+        }
+      });
+
+      // 2. Touch events (tablets, phones)
+      overlay.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        if (e.changedTouches.length > 0) {
+          const touch = e.changedTouches[0];
+          pickColor(touch.clientX, touch.clientY);
+        }
+      });
+
+      // 3. Pointer events (stylus, pen, touch)
+      overlay.addEventListener("pointerup", (e) => {
+        if (e.target === overlay) {
+          pickColor(e.clientX, e.clientY);
+        }
+      });
+
+      document.addEventListener("keydown", handleKeyDown);
+
+      // Cancel button
+      const cancelBtn = document.getElementById("cancel-picker");
+      cancelBtn?.addEventListener("click", cleanupWithKeyboard);
+    } catch (error) {
+      console.warn("Screen capture not supported or denied:", error);
+
+      // Final fallback: Simple color input
+      const input = document.createElement("input");
+      input.type = "color";
+      input.style.position = "absolute";
+      input.style.left = "-9999px";
+      document.body.appendChild(input);
+
+      input.addEventListener("change", (e) => {
+        const hex = (e.target as HTMLInputElement).value;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+
+        const hsv = rgbToHsv(r, g, b);
+        const newColor = { ...hsv, a: color.a };
+        setColor(newColor);
+        triggerOnChange(newColor);
+
+        document.body.removeChild(input);
+      });
+
+      input.click();
     }
   }, [color.a, triggerOnChange]);
 
+  // Brightness bar interaction
+  const handleBrightnessChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newV = parseFloat(e.target.value);
+      const newColor = { ...color, v: newV };
+      setColor(newColor);
+      triggerOnChange(newColor);
+    },
+    [color, triggerOnChange]
+  );
+
+  // Color ring selection
+  const handleColorRingClick = useCallback(
+    (hexColor: string) => {
+      const r = parseInt(hexColor.slice(1, 3), 16);
+      const g = parseInt(hexColor.slice(3, 5), 16);
+      const b = parseInt(hexColor.slice(5, 7), 16);
+      const { h, s, v } = rgbToHsv(r, g, b);
+      const newColor = { ...color, h, s, v };
+      setColor(newColor);
+      triggerOnChange(newColor);
+    },
+    [color, triggerOnChange]
+  );
+
+  // Helper function to determine if a color ring should be active
+  const isColorRingActive = useCallback(
+    (hexColor: string) => {
+      const r = parseInt(hexColor.slice(1, 3), 16);
+      const g = parseInt(hexColor.slice(3, 5), 16);
+      const b = parseInt(hexColor.slice(5, 7), 16);
+      const { h, s, v } = rgbToHsv(r, g, b);
+
+      // Check if current color matches this ring color (with some tolerance)
+      const hTolerance = 10; // degrees
+      const svTolerance = 0.1; // 10%
+
+      return (
+        Math.abs(color.h - h) < hTolerance &&
+        Math.abs(color.s - s) < svTolerance &&
+        Math.abs(color.v - v) < svTolerance
+      );
+    },
+    [color.h, color.s, color.v]
+  );
+
+  // Layout calculation based on visible components
+  const layoutConfig = useMemo(() => {
+    const hasEyedropper = showEyedropper && isEyedropperSupported;
+    const hasColorRings = showColorRings && colorRingsPalette.length > 0;
+    const hasBrightnessBar = showBrightnessBar;
+
+    return {
+      hasEyedropper,
+      hasColorRings,
+      hasBrightnessBar,
+      isCompactLayout: !hasColorRings && !hasBrightnessBar,
+      needsFlexLayout: hasEyedropper || hasColorRings || hasBrightnessBar,
+    };
+  }, [
+    showEyedropper,
+    isEyedropperSupported,
+    showColorRings,
+    colorRingsPalette.length,
+    showBrightnessBar,
+  ]);
+
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* Core Color Picker */}
+      {/* Top: Color Picker Circle */}
       <canvas
         ref={canvasRef}
-        className="rounded-full shadow-lg"
+        className="shadow-lg"
         style={{
           cursor: isDragging ? "grabbing" : "grab",
           touchAction: "none",
+          borderRadius: showValueSlider ? "8px" : "50%",
         }}
         onMouseDown={handlePointerDown}
         onTouchStart={handlePointerDown}
       />
 
-      {/* Optional Eyedropper Tool */}
-      {showEyedropper && isEyedropperSupported && (
-        <button
-          onClick={handleEyedropper}
-          className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 border border-gray-300 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md group"
-          title="Pick color from screen"
-        >
-          <svg
-            className="w-5 h-5 text-gray-600 group-hover:text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-            />
-          </svg>
-        </button>
+      {/* Bottom: Eyedropper (left) + Color Rings & Brightness Bar (right) */}
+      {(layoutConfig.hasEyedropper ||
+        layoutConfig.hasColorRings ||
+        layoutConfig.hasBrightnessBar) && (
+        <div className="flex items-center gap-6">
+          {/* Left: Eyedropper */}
+          {layoutConfig.hasEyedropper && (
+            <button
+              onClick={handleEyedropper}
+              className="flex items-center justify-center w-12 h-12 border border-gray-300 rounded-full shadow-sm transition-all duration-200 hover:shadow-md group"
+              title="Pick color from screen"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 256 256"
+                id="eyedropper"
+                width={30}
+                hanging={30}
+              >
+                <rect width="256" height="256" fill="none"></rect>
+                <path
+                  fill="none"
+                  stroke="#000"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="8"
+                  d="M179.799,115.799l4.88728,4.88728a16,16,0,0,1,0,22.62742l-7.02944,7.02944a8,8,0,0,1-11.3137,0l-60.6863-60.6863a8,8,0,0,1,0-11.3137l7.02944-7.02944a16,16,0,0,1,22.62742,0l4.8873,4.8873,27.58813-27.58813c10.78822-10.78822,28.36591-11.4491,39.44579-.96065A28.00039,28.00039,0,0,1,207.799,87.799Z"
+                ></path>
+                <path
+                  fill="none"
+                  stroke="#000"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="8"
+                  d="M158.62742,142.62742l-56,56a31.98729,31.98729,0,0,1-30.91154,8.28721L48.31361,217.131A8,8,0,0,1,39.456,215.456h0a5.74381,5.74381,0,0,1-1.20256-6.35955l10.832-24.81212a31.9873,31.9873,0,0,1,8.28715-30.91177l56-56"
+                ></path>
+              </svg>
+            </button>
+          )}
+
+          {/* Right: Color Rings and Brightness Bar */}
+          {(layoutConfig.hasColorRings || layoutConfig.hasBrightnessBar) && (
+            <div
+              className="flex flex-col gap-3"
+              style={{ minWidth: size * 0.8 }}
+            >
+              {/* Color Rings */}
+              {layoutConfig.hasColorRings && (
+                <div className="flex flex-col gap-2">
+                  {/* Single row when brightness bar is present, two rows when it's not */}
+                  {layoutConfig.hasBrightnessBar ? (
+                    // One row with brightness bar
+                    <div className="flex gap-2 justify-center">
+                      {colorRingsPalette.slice(0, 8).map((hexColor, index) => {
+                        const isActive = isColorRingActive(hexColor);
+                        return (
+                          <button
+                            key={`single-row-${index}`}
+                            onClick={() => handleColorRingClick(hexColor)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
+                              isActive
+                                ? "border-blue-500 border-4 scale-110"
+                                : "border-gray-300 hover:border-gray-500"
+                            }`}
+                            style={{
+                              backgroundColor: hexColor,
+                            }}
+                            title={hexColor}
+                          />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2 justify-center">
+                        {colorRingsPalette
+                          .slice(0, Math.ceil(colorRingsPalette.length / 2))
+                          .map((hexColor, index) => {
+                            const isActive = isColorRingActive(hexColor);
+                            return (
+                              <button
+                                key={`row1-${index}`}
+                                onClick={() => handleColorRingClick(hexColor)}
+                                className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
+                                  isActive
+                                    ? "border-blue-500 border-4 scale-110"
+                                    : "border-gray-300 hover:border-gray-500"
+                                }`}
+                                style={{ backgroundColor: hexColor }}
+                                title={hexColor}
+                              />
+                            );
+                          })}
+                      </div>
+                      <div className="flex gap-2 justify-center">
+                        {colorRingsPalette
+                          .slice(Math.ceil(colorRingsPalette.length / 2))
+                          .map((hexColor, index) => {
+                            const isActive = isColorRingActive(hexColor);
+                            return (
+                              <button
+                                key={`row2-${index}`}
+                                onClick={() => handleColorRingClick(hexColor)}
+                                className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
+                                  isActive
+                                    ? "border-blue-500 border-4 scale-110"
+                                    : "border-gray-300 hover:border-gray-500"
+                                }`}
+                                style={{ backgroundColor: hexColor }}
+                                title={hexColor}
+                              />
+                            );
+                          })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Brightness Bar */}
+              {layoutConfig.hasBrightnessBar && (
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={color.v}
+                    onChange={handleBrightnessChange}
+                    className="w-full h-3 appearance-none rounded-lg cursor-pointer shadow-inner range-thumb"
+                    style={{
+                      background: `linear-gradient(to right, 
+                        hsl(${color.h}, ${color.s * 100}%, 0%), 
+                        hsl(${color.h}, ${color.s * 100}%, 50%), 
+                        hsl(${color.h}, ${color.s * 100}%, 100%))`,
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
