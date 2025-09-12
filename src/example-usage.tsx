@@ -17,27 +17,86 @@ export default function ColorPickerDemo() {
         backgroundColor: `rgba(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}, ${selectedColor.a})`,
       }}
     >
-      <div className="max-w-md w-full mx-auto bg-white rounded-2xl p-6 sm:p-8 shadow-2xl">
+      <div className="max-w-4xl w-full mx-auto bg-white rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800">Z Color Picker</h1>
-          <p className="text-gray-500 mt-1">Flexible Format API Demo</p>
+          <p className="text-gray-500 mt-1">Professional Layout Demo</p>
         </div>
-        {/* Clean Color Picker Library - just the picker + optional eyedropper */}
-        <EnhancedCircularColorPicker
-          size={280}
-          initialColor={selectedColor}
-          formats={["rgba", "hex", "hsl"]}
-          onChange={(color) => {
-            console.log("Selected formats:", color);
-            // color is now: { rgba: {r,g,b,a}, hex: "#ff6432", hsl: {h,s,l} }
-            if ("rgba" in color) {
-              setSelectedColor(color.rgba);
-            }
-          }}
-          backgroundColor="transparent"
-          showBackground={false}
-          showEyedropper={true}
-        />
+
+        {/* Enhanced Color Picker with all features */}
+        <div className="flex justify-center mb-8">
+          <EnhancedCircularColorPicker
+            size={240}
+            initialColor={selectedColor}
+            formats={["rgba", "hex", "hsl"]}
+            onChange={(color) => {
+              console.log("Selected formats:", color);
+              if ("rgba" in color) {
+                setSelectedColor(color.rgba);
+              }
+            }}
+            backgroundColor="transparent"
+            showBackground={false}
+            showEyedropper={true}
+            showBrightnessBar={true}
+            showColorRings={true}
+            showValueSlider={false}
+          />
+        </div>
+
+        {/* Layout Configuration Examples */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-3 text-gray-700">
+              Minimal Setup
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <EnhancedCircularColorPicker
+                size={120}
+                initialColor={{ r: 100, g: 200, b: 255, a: 1 }}
+                showEyedropper={true}
+              />
+            </div>
+            <code className="text-xs text-gray-600 mt-2 block">
+              Only eyedropper
+            </code>
+          </div>
+
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-3 text-gray-700">
+              With Color Rings
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <EnhancedCircularColorPicker
+                size={120}
+                initialColor={{ r: 255, g: 100, b: 100, a: 1 }}
+                showEyedropper={true}
+                showColorRings={true}
+              />
+            </div>
+            <code className="text-xs text-gray-600 mt-2 block">
+              Two rows of rings
+            </code>
+          </div>
+
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-3 text-gray-700">
+              Full Layout
+            </h3>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <EnhancedCircularColorPicker
+                size={120}
+                initialColor={{ r: 150, g: 255, b: 150, a: 1 }}
+                showEyedropper={true}
+                showColorRings={true}
+                showBrightnessBar={true}
+              />
+            </div>
+            <code className="text-xs text-gray-600 mt-2 block">
+              One row + brightness bar
+            </code>
+          </div>
+        </div>
 
         {/* Parent handles all display logic */}
         <div className="mt-6 space-y-4">
@@ -65,32 +124,34 @@ export default function ColorPickerDemo() {
           {/* API Examples */}
           <div className="p-4 bg-gray-50 rounded-lg space-y-3">
             <h4 className="text-sm font-semibold text-gray-700">
-              API Examples
+              Layout Options
             </h4>
             <div className="space-y-3 text-xs">
               <div>
                 <code className="bg-white px-2 py-1 rounded">
-                  formats={["hex"]}
-                </code>
-                <br />
-                <span className="text-gray-500">→ color = "#ff6432"</span>
-              </div>
-              <div>
-                <code className="bg-white px-2 py-1 rounded">
-                  formats={["rgba", "hex"]}
+                  showEyedropper + showBrightnessBar + showColorRings
                 </code>
                 <br />
                 <span className="text-gray-500">
-                  → color = {`{ rgba: {r,g,b,a}, hex: "#..." }`}
+                  → Full professional layout
                 </span>
               </div>
               <div>
                 <code className="bg-white px-2 py-1 rounded">
-                  no formats prop
+                  showBrightnessBar={true}
                 </code>
                 <br />
                 <span className="text-gray-500">
-                  → color = {`{r,g,b,a,h,s,v}`} (default)
+                  → Horizontal brightness slider
+                </span>
+              </div>
+              <div>
+                <code className="bg-white px-2 py-1 rounded">
+                  colorRingsPalette={["#ff0000", "#00ff00"]}
+                </code>
+                <br />
+                <span className="text-gray-500">
+                  → Custom color preset palette
                 </span>
               </div>
             </div>

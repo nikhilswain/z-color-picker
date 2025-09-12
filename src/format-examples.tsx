@@ -84,6 +84,7 @@ export default function FormatExamples() {
                 }}
                 showEyedropper={false}
                 showBackground={false}
+                showValueSlider={true}
               />
 
               <div className="mt-4">
