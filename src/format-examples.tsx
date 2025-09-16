@@ -1,7 +1,5 @@
 import { useState } from "react";
-import EnhancedCircularColorPicker from "./components/color-picker";
-
-type ColorFormatType = "rgba" | "rgb" | "hex" | "hsl" | "hsla" | "hsv" | "hsva";
+import { ZColorPicker, type ColorFormatType } from "./index";
 
 export default function FormatExamples() {
   const [results, setResults] = useState<Record<string, unknown>>({});
@@ -72,19 +70,17 @@ export default function FormatExamples() {
                 </code>
               </div>
 
-              <EnhancedCircularColorPicker
+              <ZColorPicker
                 size={180}
                 initialColor={baseColor}
                 formats={example.formats}
-                onChange={(color) => {
+                onChange={(color: unknown) => {
                   setResults((prev) => ({
                     ...prev,
                     [index]: color,
                   }));
                 }}
                 showEyedropper={false}
-                showBackground={false}
-                showValueSlider={true}
               />
 
               <div className="mt-4">

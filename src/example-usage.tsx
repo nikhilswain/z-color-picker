@@ -1,5 +1,5 @@
 import { useState } from "react";
-import EnhancedCircularColorPicker from "./components/color-picker";
+import { ZColorPicker } from "./index";
 
 export default function ColorPickerDemo() {
   const [selectedColor, setSelectedColor] = useState({
@@ -25,22 +25,18 @@ export default function ColorPickerDemo() {
 
         {/* Enhanced Color Picker with all features */}
         <div className="flex justify-center mb-8">
-          <EnhancedCircularColorPicker
+          <ZColorPicker
             size={240}
             initialColor={selectedColor}
             formats={["rgba", "hex", "hsl"]}
             onChange={(color) => {
-              console.log("Selected formats:", color);
               if ("rgba" in color) {
                 setSelectedColor(color.rgba);
               }
             }}
-            backgroundColor="transparent"
-            showBackground={false}
             showEyedropper={true}
             showBrightnessBar={true}
             showColorRings={true}
-            showValueSlider={false}
           />
         </div>
 
@@ -51,7 +47,7 @@ export default function ColorPickerDemo() {
               Minimal Setup
             </h3>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <EnhancedCircularColorPicker
+              <ZColorPicker
                 size={120}
                 initialColor={{ r: 100, g: 200, b: 255, a: 1 }}
                 showEyedropper={true}
@@ -67,7 +63,7 @@ export default function ColorPickerDemo() {
               With Color Rings
             </h3>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <EnhancedCircularColorPicker
+              <ZColorPicker
                 size={120}
                 initialColor={{ r: 255, g: 100, b: 100, a: 1 }}
                 showEyedropper={true}
@@ -84,7 +80,7 @@ export default function ColorPickerDemo() {
               Full Layout
             </h3>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <EnhancedCircularColorPicker
+              <ZColorPicker
                 size={120}
                 initialColor={{ r: 150, g: 255, b: 150, a: 1 }}
                 showEyedropper={true}

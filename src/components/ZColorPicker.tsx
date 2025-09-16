@@ -6,192 +6,39 @@ import React, {
   useMemo,
 } from "react";
 
-interface RGBColor {
-  r: number;
-  g: number;
-  b: number;
-}
+// Import styles for bundling
+import "../styles/index.css";
 
-interface HSVColor {
-  h: number;
-  s: number;
-  v: number;
-}
-
-interface HSLColor {
-  h: number;
-  s: number;
-  l: number;
-}
-
-interface RGBAColor extends RGBColor {
-  a: number;
-}
-
-interface HSVAColor extends HSVColor {
-  a: number;
-}
-
-// Available color format types
-type ColorFormatType = "rgba" | "rgb" | "hex" | "hsl" | "hsla" | "hsv" | "hsva";
-
-// Individual format results
-interface ColorFormatResults {
-  rgba: RGBAColor;
-  rgb: RGBColor;
-  hex: string;
-  hsl: HSLColor;
-  hsla: HSLColor & { a: number };
-  hsv: HSVColor;
-  hsva: HSVAColor;
-}
-
-// Dynamic result type based on formats array
-type ColorResult<T extends ColorFormatType[]> = T extends [infer U]
-  ? U extends ColorFormatType
-    ? ColorFormatResults[U]
-    : never
-  : T extends []
-  ? RGBAColor & HSVAColor // Default when no formats specified
-  : { [K in T[number]]: ColorFormatResults[K] };
-
-interface ColorPickerProps<T extends ColorFormatType[] = []> {
-  size?: number;
-  onChange?: (color: ColorResult<T>) => void;
-  initialColor?: RGBAColor;
-  backgroundColor?: string;
-  showBackground?: boolean;
-  backgroundOpacity?: number;
-  showEyedropper?: boolean;
-  showValueSlider?: boolean;
-  showBrightnessBar?: boolean;
-  showColorRings?: boolean;
-  colorRingsPalette?: string[];
-  formats?: T;
-}
-
-type DragTarget = "color" | "alpha" | "value" | null;
-
-// EyeDropper API type declaration
-declare global {
-  interface Window {
-    EyeDropper?: {
-      new (): {
-        open(): Promise<{ sRGBHex: string }>;
-      };
-    };
-  }
-}
-
-const getDistance = (x1: number, y1: number, x2: number, y2: number): number =>
-  Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-
-const getAngle = (x: number, y: number, cx: number, cy: number): number =>
-  Math.atan2(y - cy, x - cx);
-
-const radToDeg = (rad: number): number => ((rad * 180) / Math.PI + 360) % 360;
-
-const hsvToRgb = (h: number, s: number, v: number): RGBColor => {
-  const c = v * s;
-  const hh = h / 60;
-  const x = c * (1 - Math.abs((hh % 2) - 1));
-  let r = 0,
-    g = 0,
-    b = 0;
-  if (hh >= 0 && hh < 1) [r, g] = [c, x];
-  else if (hh < 2) [r, g] = [x, c];
-  else if (hh < 3) [g, b] = [c, x];
-  else if (hh < 4) [g, b] = [x, c];
-  else if (hh < 5) [r, b] = [x, c];
-  else [r, b] = [c, x];
-  const m = v - c;
-  return {
-    r: Math.round((r + m) * 255),
-    g: Math.round((g + m) * 255),
-    b: Math.round((b + m) * 255),
-  };
-};
-
-const rgbToHsv = (r: number, g: number, b: number): HSVColor => {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  const max = Math.max(r, g, b),
-    min = Math.min(r, g, b);
-  const diff = max - min;
-  let h = 0;
-  if (diff !== 0) {
-    if (max === r) h = ((g - b) / diff) % 6;
-    else if (max === g) h = (b - r) / diff + 2;
-    else h = (r - g) / diff + 4;
-  }
-  h = Math.round(h * 60);
-  if (h < 0) h += 360;
-  const s = max === 0 ? 0 : diff / max;
-  return { h, s, v: max };
-};
-
-const rgbToHex = (r: number, g: number, b: number): string => {
-  const toHex = (c: number): string => `0${c.toString(16)}`.slice(-2);
-  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-};
-
-const rgbToHsl = (r: number, g: number, b: number): HSLColor => {
-  r /= 255;
-  g /= 255;
-  b /= 255;
-  const max = Math.max(r, g, b),
-    min = Math.min(r, g, b);
-  let h = 0,
-    s = 0;
-  const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r:
-        h = (g - b) / d + (g < b ? 6 : 0);
-        break;
-      case g:
-        h = (b - r) / d + 2;
-        break;
-      case b:
-        h = (r - g) / d + 4;
-        break;
-    }
-    h /= 6;
-  }
-  return {
-    h: Math.round(h * 360),
-    s: Math.round(s * 100),
-    l: Math.round(l * 100),
-  };
-};
-
-// Default preset color palette with black/white first and fewer total colors
-const DEFAULT_COLOR_PALETTE = [
-  "#000000",
-  "#FFFFFF",
-  "#FF0000",
-  "#FF8000",
-  "#FFFF00",
-  "#80FF00",
-  "#00FF00",
-  "#00FFFF",
-  "#0080FF",
-  "#0000FF",
-  "#8000FF",
-  "#FF00FF",
-  "#FF0080",
-  "#808080",
-];
+// Import from organized structure
+import type {
+  ZColorPickerProps,
+  ZColorResult,
+  ColorFormatResults,
+  ColorFormatType,
+  DragTarget,
+  HSVAColor,
+} from "../types";
+import {
+  getDistance,
+  getAngle,
+  radToDeg,
+  hsvToRgb,
+  rgbToHsv,
+  rgbToHex,
+  rgbToHsl,
+} from "../utils";
+import {
+  DEFAULT_COLOR_PALETTE,
+  LAYOUT_CONSTANTS,
+  INTERACTION_CONSTANTS,
+} from "../constants";
 
 /**
  * An enhanced, performant, and touch-friendly circular color picker for React.
  *
  * @example
  * ```tsx
- * <EnhancedCircularColorPicker
+ * <ZColorPicker
  *   size={280}
  *   initialColor={{ r: 255, g: 100, b: 50, a: 0.8 }}
  *   onChange={(color) => console.log(color)}
@@ -201,20 +48,16 @@ const DEFAULT_COLOR_PALETTE = [
  * />
  * ```
  */
-function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
-  size = 300,
+function ZColorPicker<T extends ColorFormatType[] = []>({
+  size = LAYOUT_CONSTANTS.DEFAULT_SIZE,
   onChange,
   initialColor = { r: 255, g: 0, b: 0, a: 1 },
-  backgroundColor = "#ffffff",
-  showBackground = true,
-  backgroundOpacity = 1,
   showEyedropper = false,
-  showValueSlider = false,
   showBrightnessBar = false,
   showColorRings = false,
-  colorRingsPalette = DEFAULT_COLOR_PALETTE,
+  colorRingsPalette = [...DEFAULT_COLOR_PALETTE],
   formats,
-}: ColorPickerProps<T>) {
+}: ZColorPickerProps<T>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -232,31 +75,19 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
   });
 
   // Layout constants are memoized to prevent recalculations
-  const {
-    centerX,
-    centerY,
-    wheelRadius,
-    alphaInnerRadius,
-    alphaOuterRadius,
-    valueSliderX,
-    valueSliderY,
-    valueSliderWidth,
-    valueSliderHeight,
-  } = useMemo(
-    () => ({
-      centerX: size / 2,
-      centerY: size / 2,
-      wheelRadius: size * 0.35,
-      alphaInnerRadius: size * 0.35 + 15,
-      alphaOuterRadius: size / 2 - 10,
-      // Value slider positioned to the right of the wheel
-      valueSliderX: showValueSlider ? size + 20 : 0,
-      valueSliderY: size * 0.1,
-      valueSliderWidth: showValueSlider ? 30 : 0,
-      valueSliderHeight: showValueSlider ? size * 0.8 : 0,
-    }),
-    [size, showValueSlider]
-  );
+  const { centerX, centerY, wheelRadius, alphaInnerRadius, alphaOuterRadius } =
+    useMemo(
+      () => ({
+        centerX: size / 2,
+        centerY: size / 2,
+        wheelRadius: size * LAYOUT_CONSTANTS.WHEEL_RADIUS_RATIO,
+        alphaInnerRadius:
+          size * LAYOUT_CONSTANTS.WHEEL_RADIUS_RATIO +
+          LAYOUT_CONSTANTS.ALPHA_INNER_RADIUS_OFFSET,
+        alphaOuterRadius: size / 2 - LAYOUT_CONSTANTS.ALPHA_OUTER_RADIUS_OFFSET,
+      }),
+      [size]
+    );
 
   // Derived color values are memoized for performance
   const derivedColors = useMemo(() => {
@@ -305,7 +136,10 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
 
           // Add anti-aliasing at the edge
           let alpha = 255;
-          if (distance > wheelRadius - 1) {
+          if (
+            distance >
+            wheelRadius - INTERACTION_CONSTANTS.ANTI_ALIASING_EDGE_WIDTH
+          ) {
             alpha = Math.max(0, 255 * (wheelRadius - distance));
           }
 
@@ -338,12 +172,6 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     ctx.save();
     ctx.scale(pixelRatio, pixelRatio);
     ctx.clearRect(0, 0, size, size);
-    if (showBackground) {
-      ctx.fillStyle = backgroundColor;
-      ctx.globalAlpha = backgroundOpacity;
-      ctx.fillRect(0, 0, size, size);
-      ctx.globalAlpha = 1;
-    }
 
     if (wheelCanvasRef.current) {
       ctx.drawImage(wheelCanvasRef.current, 0, 0);
@@ -377,11 +205,11 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
 
     const drawIndicator = (x: number, y: number) => {
       ctx.beginPath();
-      ctx.arc(x, y, 6, 0, 2 * Math.PI);
+      ctx.arc(x, y, LAYOUT_CONSTANTS.INDICATOR_RADIUS, 0, 2 * Math.PI);
       ctx.fillStyle = "#fff";
       ctx.fill();
       ctx.strokeStyle = "#333";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = LAYOUT_CONSTANTS.INDICATOR_BORDER_WIDTH;
       ctx.stroke();
     };
 
@@ -399,62 +227,6 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       centerY + ringRadius * Math.sin(alphaAngle)
     );
 
-    // Draw Value Slider (if enabled)
-    if (showValueSlider) {
-      ctx.save();
-
-      // Create gradient from current hue/saturation at full brightness to black
-      const gradient = ctx.createLinearGradient(
-        0,
-        valueSliderY,
-        0,
-        valueSliderY + valueSliderHeight
-      );
-      const fullBrightColor = hsvToRgb(color.h, color.s, 1);
-      gradient.addColorStop(
-        0,
-        `rgb(${fullBrightColor.r}, ${fullBrightColor.g}, ${fullBrightColor.b})`
-      );
-      gradient.addColorStop(1, "rgb(0, 0, 0)");
-
-      // Draw slider background
-      ctx.fillStyle = gradient;
-      ctx.fillRect(
-        valueSliderX,
-        valueSliderY,
-        valueSliderWidth,
-        valueSliderHeight
-      );
-
-      // Draw slider border
-      ctx.strokeStyle = "#ccc";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(
-        valueSliderX,
-        valueSliderY,
-        valueSliderWidth,
-        valueSliderHeight
-      );
-
-      // Draw value indicator
-      const valueIndicatorY = valueSliderY + (1 - color.v) * valueSliderHeight;
-      ctx.fillStyle = "#fff";
-      ctx.strokeStyle = "#333";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(
-        valueSliderX + valueSliderWidth / 2,
-        valueIndicatorY,
-        6,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
     ctx.restore();
   }, [
     size,
@@ -465,14 +237,6 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     wheelRadius,
     alphaInnerRadius,
     alphaOuterRadius,
-    showBackground,
-    backgroundColor,
-    backgroundOpacity,
-    showValueSlider,
-    valueSliderX,
-    valueSliderY,
-    valueSliderWidth,
-    valueSliderHeight,
   ]);
 
   // Setup high-DPI canvas
@@ -481,14 +245,14 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     if (!canvas) return;
 
     const pixelRatio = window.devicePixelRatio || 1;
-    const canvasWidth = showValueSlider ? size + valueSliderWidth + 20 : size;
+    const canvasWidth = size;
     const canvasHeight = size;
 
     canvas.width = canvasWidth * pixelRatio;
     canvas.height = canvasHeight * pixelRatio;
     canvas.style.width = `${canvasWidth}px`;
     canvas.style.height = `${canvasHeight}px`;
-  }, [size, showValueSlider, valueSliderWidth]);
+  }, [size]);
 
   useEffect(() => {
     drawCanvas();
@@ -522,18 +286,18 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       // Return data based on formats prop
       if (!formats || formats.length === 0) {
         // Default: return RGBA + HSVA merged object (backward compatibility)
-        onChange?.({ ...newColor, r, g, b } as ColorResult<T>);
+        onChange?.({ ...newColor, r, g, b } as ZColorResult<T>);
       } else if (formats.length === 1) {
         // Single format: return direct value
         const format = formats[0];
-        onChange?.(formatResults[format] as ColorResult<T>);
+        onChange?.(formatResults[format] as ZColorResult<T>);
       } else {
         // Multiple formats: return object with requested formats
         const result = {} as Record<string, unknown>;
         formats.forEach((format) => {
           result[format] = formatResults[format];
         });
-        onChange?.(result as ColorResult<T>);
+        onChange?.(result as ZColorResult<T>);
       }
     },
     [onChange, formats]
@@ -578,58 +342,12 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
     [centerX, centerY, color, triggerOnChange]
   );
 
-  const updateValueFromPosition = useCallback(
-    (x: number, y: number) => {
-      if (!showValueSlider) return;
-      // Check if click is within value slider bounds
-      if (
-        x >= valueSliderX &&
-        x <= valueSliderX + valueSliderWidth &&
-        y >= valueSliderY &&
-        y <= valueSliderY + valueSliderHeight
-      ) {
-        // Calculate value from y position (top = 1.0, bottom = 0.0)
-        const relativeY = Math.max(
-          0,
-          Math.min(valueSliderHeight, y - valueSliderY)
-        );
-        const value = Math.max(
-          0,
-          Math.min(1, 1 - relativeY / valueSliderHeight)
-        );
-        const newColor = { ...color, v: value };
-        setColor(newColor);
-        triggerOnChange(newColor);
-      }
-    },
-    [
-      showValueSlider,
-      valueSliderX,
-      valueSliderY,
-      valueSliderWidth,
-      valueSliderHeight,
-      color,
-      triggerOnChange,
-    ]
-  );
-
   const handlePointerDown = useCallback(
     (e: React.MouseEvent | React.TouchEvent) => {
       const { x, y } = getPointerPosition(e);
       const distance = getDistance(x, y, centerX, centerY);
 
-      // Check value slider first (if enabled)
-      if (
-        showValueSlider &&
-        x >= valueSliderX &&
-        x <= valueSliderX + valueSliderWidth &&
-        y >= valueSliderY &&
-        y <= valueSliderY + valueSliderHeight
-      ) {
-        setIsDragging(true);
-        setDragTarget("value");
-        updateValueFromPosition(x, y);
-      } else if (distance <= wheelRadius) {
+      if (distance <= wheelRadius) {
         setIsDragging(true);
         setDragTarget("color");
         updateColorFromPosition(x, y);
@@ -646,14 +364,8 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       wheelRadius,
       alphaInnerRadius,
       alphaOuterRadius,
-      showValueSlider,
-      valueSliderX,
-      valueSliderY,
-      valueSliderWidth,
-      valueSliderHeight,
       updateColorFromPosition,
       updateAlphaFromPosition,
-      updateValueFromPosition,
     ]
   );
 
@@ -666,8 +378,6 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
         updateColorFromPosition(x, y);
       } else if (dragTarget === "alpha") {
         updateAlphaFromPosition(x, y);
-      } else if (dragTarget === "value") {
-        updateValueFromPosition(x, y);
       }
     },
     [
@@ -676,7 +386,6 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       getPointerPosition,
       updateColorFromPosition,
       updateAlphaFromPosition,
-      updateValueFromPosition,
     ]
   );
 
@@ -922,8 +631,8 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
       const { h, s, v } = rgbToHsv(r, g, b);
 
       // Check if current color matches this ring color (with some tolerance)
-      const hTolerance = 10; // degrees
-      const svTolerance = 0.1; // 10%
+      const { HUE: hTolerance, SATURATION_VALUE: svTolerance } =
+        INTERACTION_CONSTANTS.COLOR_RING_TOLERANCE;
 
       return (
         Math.abs(color.h - h) < hTolerance &&
@@ -964,7 +673,7 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
         style={{
           cursor: isDragging ? "grabbing" : "grab",
           touchAction: "none",
-          borderRadius: showValueSlider ? "8px" : "50%",
+          borderRadius: "50%",
         }}
         onMouseDown={handlePointerDown}
         onTouchStart={handlePointerDown}
@@ -1031,7 +740,7 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
                             onClick={() => handleColorRingClick(hexColor)}
                             className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
                               isActive
-                                ? "border-blue-500 border-4 scale-110"
+                                ? "border-gray-500 border-1 scale-110"
                                 : "border-gray-300 hover:border-gray-500"
                             }`}
                             style={{
@@ -1117,4 +826,4 @@ function EnhancedCircularColorPicker<T extends ColorFormatType[] = []>({
   );
 }
 
-export default EnhancedCircularColorPicker;
+export default ZColorPicker;
