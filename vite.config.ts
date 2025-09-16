@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
             },
           },
           sourcemap: true,
-          emptyOutDir: true,
+          emptyOutDir: false, // Don't empty so we can keep our optimized CSS
           cssCodeSplit: false,
         }
       : undefined,

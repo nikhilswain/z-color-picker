@@ -23,7 +23,7 @@ npm install z-color-picker
 
 ```tsx
 import { ZColorPicker } from "z-color-picker";
-import "z-color-picker/styles";
+import "z-color-picker/styles"; // Import the CSS styles
 
 function App() {
   const handleColorChange = (colorResult) => {
@@ -40,6 +40,43 @@ function App() {
   );
 }
 ```
+
+### CSS Import Options
+
+The component requires CSS styles to work properly. You have several options to import them:
+
+**Option 1: Named import (recommended)**
+
+```tsx
+import "z-color-picker/styles";
+```
+
+**Option 2: Direct CSS import**
+
+```tsx
+import "z-color-picker/dist/z-color-picker.css";
+```
+
+**Option 3: In your CSS file**
+
+```css
+@import "z-color-picker/styles";
+/* or */
+@import "z-color-picker/dist/z-color-picker.css";
+```
+
+> **Note**: The CSS file (~1.8KB) contains only the utility classes used by the color picker component. No additional Tailwind CSS setup is required in your project.
+
+### For Developers: CSS Maintenance
+
+If you modify the component and add/remove Tailwind classes:
+
+1. **Update classes in component**: Add or remove classes in `src/components/ZColorPicker.tsx`
+2. **Update minimal.css**: Add any new utility classes to `src/styles/minimal.css`
+3. **Rebuild CSS**: Run `npm run build:css-optimized` to extract classes and update the optimized CSS
+4. **Build library**: Run `npm run build:lib` to build the complete library
+
+The CSS build process automatically scans the component file and extracts all used Tailwind classes to keep the bundle minimal.
 
 ## Color Format Examples
 
