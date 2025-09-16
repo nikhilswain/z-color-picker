@@ -44,10 +44,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:lib": "vite build --mode library && tsc -p tsconfig.lib.json",
+    "build:lib": "npm run build:css-optimized && vite build --mode library && tsc -p tsconfig.lib.json",
+    "build:css-optimized": "node scripts/build-css.js",
     "lint": "eslint .",
     "preview": "vite preview",
-    "prepublishOnly": "npm run build:lib"
+    "prepublishOnly": "npm run build:lib",
+    "publish": "npm run build:lib && npm publish --access public"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
@@ -56,10 +58,13 @@
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "postcss": "^8.5.6",
+    "postcss-cli": "^11.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.13",
