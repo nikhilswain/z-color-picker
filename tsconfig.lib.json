@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationDir": "./dist",
+    "emitDeclarationOnly": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": ["src/**/*", "src/types/global.d.ts"],
+  "exclude": [
+    "src/App.tsx",
+    "src/main.tsx",
+    "src/example-usage.tsx",
+    "src/format-examples.tsx"
+  ]
+}

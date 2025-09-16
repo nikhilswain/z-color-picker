@@ -2,6 +2,7 @@
 
 /* Z Color Picker Styles */
 
+/* Range slider custom styling for brightness bar */
 .range-thumb {
   -webkit-appearance: none;
   appearance: none;
