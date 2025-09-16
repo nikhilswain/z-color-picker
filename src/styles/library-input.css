@@ -1,0 +1,31 @@
+/* Only import the utilities we need, not the full framework */
+
+/* Custom range slider styles - keep these */
+.range-thumb {
+  appearance: none;
+  cursor: grab;
+}
+
+.range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  cursor: grab;
+  background: #fff;
+  border: 2px solid #333;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.range-thumb::-moz-range-thumb {
+  cursor: grab;
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Import only Tailwind utilities - no base styles */
+@tailwind utilities;

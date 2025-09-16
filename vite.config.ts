@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const isLibrary = mode === "library";
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), ...(isLibrary ? [] : [tailwindcss()])],
     resolve: {
       alias: {
         "@": "/src",
