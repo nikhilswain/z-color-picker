@@ -7,7 +7,7 @@ import React, {
 } from "react";
 
 // Import styles for bundling
-import "../styles/library.css";
+import "../styles/global.css";
 
 // Import from organized structure
 import type {
