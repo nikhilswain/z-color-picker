@@ -16,14 +16,14 @@ An enhanced, performant, and cross-device compatible React color picker with HSV
 ## Installation
 
 ```bash
-npm install z-color-picker
+npm install @zzro/z-color-picker
 ```
 
 ## Quick Start
 
 ```tsx
-import { ZColorPicker } from "z-color-picker";
-import "z-color-picker/styles"; // Import the CSS styles
+import { ZColorPicker } from "@zzro/z-color-picker";
+import "@zzro/z-color-picker/styles"; // Import the CSS styles
 
 function App() {
   const handleColorChange = (colorResult) => {
@@ -41,42 +41,25 @@ function App() {
 }
 ```
 
-### CSS Import Options
+### CSS Import
 
-The component requires CSS styles to work properly. You have several options to import them:
-
-**Option 1: Named import (recommended)**
+The component requires CSS styles to work properly. Import them using:
 
 ```tsx
-import "z-color-picker/styles";
+import "@zzro/z-color-picker/styles";
 ```
 
-**Option 2: Direct CSS import**
+**Alternative import methods:**
 
 ```tsx
-import "z-color-picker/dist/z-color-picker.css";
+// Direct CSS import
+import "@zzro/z-color-picker/dist/z-color-picker.css";
 ```
-
-**Option 3: In your CSS file**
 
 ```css
-@import "z-color-picker/styles";
-/* or */
-@import "z-color-picker/dist/z-color-picker.css";
+/* In your CSS file */
+@import "@zzro/z-color-picker/styles";
 ```
-
-> **Note**: The CSS file (~1.8KB) contains only the utility classes used by the color picker component. No additional Tailwind CSS setup is required in your project.
-
-### For Developers: CSS Maintenance
-
-If you modify the component and add/remove Tailwind classes:
-
-1. **Update classes in component**: Add or remove classes in `src/components/ZColorPicker.tsx`
-2. **Update minimal.css**: Add any new utility classes to `src/styles/minimal.css`
-3. **Rebuild CSS**: Run `npm run build:css-optimized` to extract classes and update the optimized CSS
-4. **Build library**: Run `npm run build:lib` to build the complete library
-
-The CSS build process automatically scans the component file and extracts all used Tailwind classes to keep the bundle minimal.
 
 ## Color Format Examples
 
@@ -144,14 +127,14 @@ The eyedropper feature works across all devices:
 
 ## Styling
 
-The component uses Tailwind CSS classes. Make sure you have Tailwind CSS installed and configured in your project, or override the styles as needed.
+The component comes with pre-compiled CSS that includes all necessary styles. No additional CSS framework setup is required in your project. You can override styles by targeting the component classes with higher specificity CSS.
 
 ## TypeScript
 
 Full TypeScript support is included:
 
 ```tsx
-import { ZColorPicker, type ZColorResult } from "z-color-picker";
+import { ZColorPicker, type ZColorResult } from "@zzro/z-color-picker";
 
 // Type-safe color handling
 const handleColorChange = (color: ZColorResult<["hex", "rgb"]>) => {
