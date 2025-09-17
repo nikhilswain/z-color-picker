@@ -23,11 +23,12 @@ export default defineConfig(({ mode }) => {
             formats: ["es", "umd"],
           },
           rollupOptions: {
-            external: ["react", "react-dom"],
+            external: ["react", "react-dom", "react/jsx-runtime"],
             output: {
               globals: {
                 react: "React",
                 "react-dom": "ReactDOM",
+                "react/jsx-runtime": "React",
               },
               exports: "named",
             },
@@ -35,6 +36,14 @@ export default defineConfig(({ mode }) => {
           sourcemap: true,
           emptyOutDir: false, // Don't empty so we can keep our optimized CSS
           cssCodeSplit: false,
+          target: "esnext",
+        }
+      : undefined,
+    define: isLibrary
+      ? {
+          "process.env.NODE_ENV": '"production"',
+          __DEV__: false,
+          __REACT_DEVTOOLS_GLOBAL_HOOK__: "undefined",
         }
       : undefined,
   };
