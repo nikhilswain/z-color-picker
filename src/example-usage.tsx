@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ZColorPicker } from "./index";
+import { ZColorPicker, type ZColorResult } from "./index";
 
 export default function ColorPickerDemo() {
   const [selectedColor, setSelectedColor] = useState({
@@ -9,12 +9,24 @@ export default function ColorPickerDemo() {
     a: 1,
   });
 
+  // Type-safe handler using ZColorResult
+  const handleColorChange = (result: ZColorResult<["rgba", "hex", "hsl"]>) => {
+    setSelectedColor(result.rgba);
+    console.log("Selected colors:", {
+      rgba: result.rgba,
+      hex: result.hex,
+      hsl: result.hsl,
+    });
+  };
+
   return (
     <div
-      className="min-h-screen p-4 sm:p-8 flex items-center justify-center"
+      className="z-color-picker min-h-screen p-4 sm:p-8 flex items-center justify-center"
       style={{
         transition: "background-color 0.3s ease",
         backgroundColor: `rgba(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}, ${selectedColor.a})`,
+        minHeight: "100vh",
+        padding: "1rem",
       }}
     >
       <div className="max-w-4xl w-full mx-auto bg-white rounded-2xl p-6 sm:p-8 shadow-2xl">
@@ -29,11 +41,7 @@ export default function ColorPickerDemo() {
             size={240}
             initialColor={selectedColor}
             formats={["rgba", "hex", "hsl"]}
-            onChange={(color) => {
-              if ("rgba" in color) {
-                setSelectedColor(color.rgba);
-              }
-            }}
+            onChange={handleColorChange}
             showEyedropper={true}
             showBrightnessBar={true}
             showColorRings={true}

@@ -1,31 +1,249 @@
-@import "tailwindcss";
+/*
+  Z Color Picker Styles (variables scoped to .z-color-picker)
+*/
 
-/* Z Color Picker Styles */
+/* ---------------------------
+   Scoped variables
+   --------------------------- */
+.z-color-picker {
+  /* Colors */
+  --zcp-gray-300: #d1d5db;
+  --zcp-gray-500: #6b7280;
+  --zcp-blue-500: #3b82f6;
+  --zcp-thumb-bg: #ffffff;
+  --zcp-thumb-border: #333333;
 
-.range-thumb {
+  /* Gaps / spacing */
+  --zcp-gap-2: 0.5rem; /* 8px */
+  --zcp-gap-3: 0.75rem; /* 12px */
+  --zcp-gap-4: 1rem; /* 16px */
+  --zcp-gap-6: 1.5rem; /* 24px */
+
+  /* Sizes */
+  --zcp-size-6: 1.5rem; /* 24px */
+  --zcp-size-12: 3rem; /* 48px */
+  --zcp-h-3: 0.75rem; /* 12px */
+  --zcp-thumb-size: 16px;
+
+  /* Border */
+  --zcp-border-1: 1px;
+  --zcp-border-2: 2px;
+  --zcp-border-4: 4px;
+
+  /* Radius */
+  --zcp-radius-full: 9999px;
+  --zcp-radius-lg: 0.5rem; /* 8px */
+
+  /* Shadows */
+  --zcp-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --zcp-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --zcp-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --zcp-shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --zcp-thumb-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  /* Transitions */
+  --zcp-transition-duration: 200ms;
+}
+
+/* ---------------------------
+   Utilities (scoped)
+   --------------------------- */
+
+/* Flexbox utilities */
+.z-color-picker .flex {
+  display: flex;
+}
+
+.z-color-picker .flex-col {
+  flex-direction: column;
+}
+
+.z-color-picker .items-center {
+  align-items: center;
+}
+
+.z-color-picker .justify-center {
+  justify-content: center;
+}
+
+/* Gap utilities */
+.z-color-picker .gap-2 {
+  gap: var(--zcp-gap-2);
+}
+
+.z-color-picker .gap-3 {
+  gap: var(--zcp-gap-3);
+}
+
+.z-color-picker .gap-4 {
+  gap: var(--zcp-gap-4);
+}
+
+.z-color-picker .gap-6 {
+  gap: var(--zcp-gap-6);
+}
+
+/* Width and height utilities */
+.z-color-picker .w-6 {
+  width: var(--zcp-size-6);
+}
+
+.z-color-picker .h-6 {
+  height: var(--zcp-size-6);
+}
+
+.z-color-picker .w-12 {
+  width: var(--zcp-size-12);
+}
+
+.z-color-picker .h-12 {
+  height: var(--zcp-size-12);
+}
+
+.z-color-picker .w-full {
+  width: 100%;
+}
+
+.z-color-picker .h-3 {
+  height: var(--zcp-h-3);
+}
+
+/* Border utilities */
+.z-color-picker .border {
+  border-width: var(--zcp-border-1);
+  border-style: solid;
+}
+
+.z-color-picker .border-1 {
+  border-width: var(--zcp-border-1);
+  border-style: solid;
+}
+
+.z-color-picker .border-2 {
+  border-width: var(--zcp-border-2);
+  border-style: solid;
+}
+
+.z-color-picker .border-4 {
+  border-width: var(--zcp-border-4);
+  border-style: solid;
+}
+
+.z-color-picker .border-gray-300 {
+  border-color: var(--zcp-gray-300);
+}
+
+.z-color-picker .border-gray-500 {
+  border-color: var(--zcp-gray-500);
+}
+
+.z-color-picker .border-blue-500 {
+  border-color: var(--zcp-blue-500);
+}
+
+/* Border radius utilities */
+.z-color-picker .rounded-full {
+  border-radius: var(--zcp-radius-full);
+}
+
+.z-color-picker .rounded-lg {
+  border-radius: var(--zcp-radius-lg);
+}
+
+/* Shadow utilities */
+.z-color-picker .shadow-lg {
+  box-shadow: var(--zcp-shadow-lg);
+}
+
+.z-color-picker .shadow-sm {
+  box-shadow: var(--zcp-shadow-sm);
+}
+
+.z-color-picker .shadow-md {
+  box-shadow: var(--zcp-shadow-md);
+}
+
+.z-color-picker .shadow-inner {
+  box-shadow: var(--zcp-shadow-inner);
+}
+
+/* Positioning utilities */
+.z-color-picker .relative {
+  position: relative;
+}
+
+/* Appearance utilities */
+.z-color-picker .appearance-none {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Cursor utilities */
+.z-color-picker .cursor-pointer {
+  cursor: pointer;
+}
+
+.z-color-picker .cursor-grab {
+  cursor: grab;
+}
+
+/* Transition utilities */
+.z-color-picker .transition-all {
+  transition-property: all;
+}
+
+.z-color-picker .duration-200 {
+  transition-duration: var(--zcp-transition-duration);
+}
+
+/* Hover effects */
+.z-color-picker .hover\:scale-110:hover {
+  transform: scale(1.1);
+}
+
+.z-color-picker .hover\:shadow-md:hover {
+  box-shadow: var(--zcp-shadow-md);
+}
+
+.z-color-picker .hover\:border-gray-500:hover {
+  border-color: var(--zcp-gray-500);
+}
+
+/* Scale utilities */
+.z-color-picker .scale-110 {
+  transform: scale(1.1);
+}
+
+/* Range slider styles (thumb) */
+.z-color-picker .range-thumb {
   -webkit-appearance: none;
   appearance: none;
   cursor: grab;
-}
-
-.range-thumb::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid rgb(51, 51, 51);
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.range-thumb::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: white;
-  border: 2px solid rgb(51, 51, 51);
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: transparent; /* track styling should be separate */
   border: none;
+}
+
+.z-color-picker .range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: var(--zcp-thumb-size);
+  width: var(--zcp-thumb-size);
+  border-radius: 50%;
+  background: var(--zcp-thumb-bg);
+  border: var(--zcp-border-2) solid var(--zcp-thumb-border);
+  cursor: grab;
+  box-shadow: var(--zcp-thumb-shadow);
+}
+
+.z-color-picker .range-thumb::-moz-range-thumb {
+  height: var(--zcp-thumb-size);
+  width: var(--zcp-thumb-size);
+  border-radius: 50%;
+  background: var(--zcp-thumb-bg);
+  border: var(--zcp-border-2) solid var(--zcp-thumb-border);
+  cursor: grab;
+  box-shadow: var(--zcp-thumb-shadow);
 }
