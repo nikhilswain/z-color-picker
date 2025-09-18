@@ -55,6 +55,7 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
   showEyedropper = false,
   showBrightnessBar = false,
   showColorRings = false,
+  pickerBgColor = "#ffffff",
   colorRingsPalette = [...DEFAULT_COLOR_PALETTE],
   formats,
 }: ZColorPickerProps<T>) {
@@ -287,12 +288,8 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
       if (!formats || formats.length === 0) {
         // Default: return RGBA + HSVA merged object (backward compatibility)
         onChange?.({ ...newColor, r, g, b } as ZColorResult<T>);
-      } else if (formats.length === 1) {
-        // Single format: return direct value
-        const format = formats[0];
-        onChange?.(formatResults[format] as ZColorResult<T>);
       } else {
-        // Multiple formats: return object with requested formats
+        // Always return object with format keys (single or multiple formats)
         const result = {} as Record<string, unknown>;
         formats.forEach((format) => {
           result[format] = formatResults[format];
@@ -665,7 +662,7 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
   ]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="z-color-picker flex flex-col items-center gap-4">
       {/* Top: Color Picker Circle */}
       <canvas
         ref={canvasRef}
@@ -674,6 +671,7 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
           cursor: isDragging ? "grabbing" : "grab",
           touchAction: "none",
           borderRadius: "50%",
+          backgroundColor: pickerBgColor,
         }}
         onMouseDown={handlePointerDown}
         onTouchStart={handlePointerDown}
@@ -688,7 +686,7 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
           {layoutConfig.hasEyedropper && (
             <button
               onClick={handleEyedropper}
-              className="flex items-center justify-center w-12 h-12 border border-gray-300 rounded-full shadow-sm transition-all duration-200 hover:shadow-md group"
+              className="flex items-center justify-center w-12 h-12 border border-gray-300 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
               title="Pick color from screen"
             >
               <svg

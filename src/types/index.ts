@@ -46,7 +46,14 @@ export interface HSVAColor extends HSVColor {
 /**
  * Available color format types for output
  */
-export type ColorFormatType = "rgba" | "rgb" | "hex" | "hsl" | "hsla" | "hsv" | "hsva";
+export type ColorFormatType =
+  | "rgba"
+  | "rgb"
+  | "hex"
+  | "hsl"
+  | "hsla"
+  | "hsv"
+  | "hsva";
 
 /**
  * Individual format results mapping
@@ -63,15 +70,10 @@ export interface ColorFormatResults {
 
 /**
  * Dynamic result type based on formats array
- * - Single format: returns the format directly
- * - Multiple formats: returns object with format keys
+ * - Single or multiple formats: returns object with format keys
  * - No formats: returns default RGBA + HSVA merged object
  */
-export type ZColorResult<T extends ColorFormatType[]> = T extends [infer U]
-  ? U extends ColorFormatType
-    ? ColorFormatResults[U]
-    : never
-  : T extends []
+export type ZColorResult<T extends ColorFormatType[]> = T extends []
   ? RGBAColor & HSVAColor // Default when no formats specified
   : { [K in T[number]]: ColorFormatResults[K] };
 
@@ -81,7 +83,33 @@ export type ZColorResult<T extends ColorFormatType[]> = T extends [infer U]
 export type DragTarget = "color" | "alpha" | "value" | null;
 
 /**
- * Main color picker component props
+ *  @interface ZColorPickerProps
+ * Props for the ZColorPicker component
+ * @template T - Array of ColorFormatType determining output formats
+ * @default [] (returns RGBA + HSVA by default)
+ * @example
+ * <ZColorPicker
+ * size={300}
+ * onChange={(color) => console.log(color)}
+ * initialColor={{ r: 255, g: 0, b: 0, a: 1 }}
+ * showEyedropper={true}
+ * showBrightnessBar={true}
+ * showColorRings={true}
+ * pickerBgColor="#ffffff"
+ * colorRingsPalette={['#FF0000', '#00FF00', '#0000FF']}
+ * formats={['hex', 'rgba']}
+ * />
+ *
+ * @description
+ * - `size`: Size of the color picker in pixels (default: 300)
+ * - `onChange`: Callback fired when color changes, receives color in specified formats
+ * - `initialColor`: Initial color value as RGBA (default: opaque black)
+ * - `showEyedropper`: Whether to show the eyedropper tool (default: false)
+ * - `showBrightnessBar`: Whether to show the brightness bar (default: true)
+ * - `showColorRings`: Whether to show color preset rings (default: true)
+ * - `pickerBgColor`: Background color of the picker (default: #ffffff)
+ * - `colorRingsPalette`: Custom color palette for the rings (default: preset colors)
+ * - `formats`: Array of desired output formats, determines the return type of onChange (default: [])
  */
 export interface ZColorPickerProps<T extends ColorFormatType[] = []> {
   /** Size of the color picker in pixels */
@@ -97,6 +125,8 @@ export interface ZColorPickerProps<T extends ColorFormatType[] = []> {
   /** Show color preset rings */
   showColorRings?: boolean;
   /** Custom color palette for rings */
+  pickerBgColor?: string;
+  /** Custom color for circular picker background */
   colorRingsPalette?: string[];
   /** Output formats (determines return type) */
   formats?: T;

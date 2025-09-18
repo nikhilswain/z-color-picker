@@ -15,11 +15,12 @@ export { default as ZColorPicker } from "./components/ZColorPicker";
 
 // Type exports for TypeScript users
 export type {
-  // Format types
-  ColorFormatType,
-  ColorFormatResults,
+  // Result types (most important for onChange handlers)
   ZColorResult,
 
-  // Component types
+  // Component types (for component props)
   ZColorPickerProps,
+
+  // Format constraint (useful for generic functions)
+  ColorFormatType,
 } from "./types";
