@@ -1,3 +1,5 @@
+// Basic usage examples demonstrating TypeScript types for ZColorPicker component
+
 import { useState } from "react";
 import { ZColorPicker, type ZColorResult, type ColorFormatType } from "./index"; // Using local import since this is in the same project
 
