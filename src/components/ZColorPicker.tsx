@@ -662,164 +662,173 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
   ]);
 
   return (
-    <div className="z-color-picker flex flex-col items-center gap-4">
-      {/* Top: Color Picker Circle */}
-      <canvas
-        ref={canvasRef}
-        className="shadow-lg"
-        style={{
-          cursor: isDragging ? "grabbing" : "grab",
-          touchAction: "none",
-          borderRadius: "50%",
-          backgroundColor: pickerBgColor,
-        }}
-        onMouseDown={handlePointerDown}
-        onTouchStart={handlePointerDown}
-      />
+    <div
+      className="z-color-picker"
+      style={{
+        width: "fit-content",
+      }}
+    >
+      <div className="flex flex-col items-center gap-4">
+        {/* Top: Color Picker Circle */}
+        <canvas
+          ref={canvasRef}
+          className="shadow-lg"
+          style={{
+            cursor: isDragging ? "grabbing" : "grab",
+            touchAction: "none",
+            borderRadius: "50%",
+            backgroundColor: pickerBgColor,
+          }}
+          onMouseDown={handlePointerDown}
+          onTouchStart={handlePointerDown}
+        />
 
-      {/* Bottom: Eyedropper (left) + Color Rings & Brightness Bar (right) */}
-      {(layoutConfig.hasEyedropper ||
-        layoutConfig.hasColorRings ||
-        layoutConfig.hasBrightnessBar) && (
-        <div className="flex items-center gap-6">
-          {/* Left: Eyedropper */}
-          {layoutConfig.hasEyedropper && (
-            <button
-              onClick={handleEyedropper}
-              className="flex items-center justify-center w-12 h-12 border border-gray-300 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
-              title="Pick color from screen"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 256 256"
-                id="eyedropper"
-                width={30}
-                hanging={30}
+        {/* Bottom: Eyedropper (left) + Color Rings & Brightness Bar (right) */}
+        {(layoutConfig.hasEyedropper ||
+          layoutConfig.hasColorRings ||
+          layoutConfig.hasBrightnessBar) && (
+          <div className="flex items-center gap-6">
+            {/* Left: Eyedropper */}
+            {layoutConfig.hasEyedropper && (
+              <button
+                onClick={handleEyedropper}
+                className="flex items-center justify-center w-12 h-12 border border-gray-300 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
+                title="Pick color from screen"
               >
-                <rect width="256" height="256" fill="none"></rect>
-                <path
-                  fill="none"
-                  stroke="#000"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="8"
-                  d="M179.799,115.799l4.88728,4.88728a16,16,0,0,1,0,22.62742l-7.02944,7.02944a8,8,0,0,1-11.3137,0l-60.6863-60.6863a8,8,0,0,1,0-11.3137l7.02944-7.02944a16,16,0,0,1,22.62742,0l4.8873,4.8873,27.58813-27.58813c10.78822-10.78822,28.36591-11.4491,39.44579-.96065A28.00039,28.00039,0,0,1,207.799,87.799Z"
-                ></path>
-                <path
-                  fill="none"
-                  stroke="#000"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="8"
-                  d="M158.62742,142.62742l-56,56a31.98729,31.98729,0,0,1-30.91154,8.28721L48.31361,217.131A8,8,0,0,1,39.456,215.456h0a5.74381,5.74381,0,0,1-1.20256-6.35955l10.832-24.81212a31.9873,31.9873,0,0,1,8.28715-30.91177l56-56"
-                ></path>
-              </svg>
-            </button>
-          )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 256 256"
+                  id="eyedropper"
+                  width={30}
+                  hanging={30}
+                >
+                  <rect width="256" height="256" fill="none"></rect>
+                  <path
+                    fill="none"
+                    stroke="#000"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="8"
+                    d="M179.799,115.799l4.88728,4.88728a16,16,0,0,1,0,22.62742l-7.02944,7.02944a8,8,0,0,1-11.3137,0l-60.6863-60.6863a8,8,0,0,1,0-11.3137l7.02944-7.02944a16,16,0,0,1,22.62742,0l4.8873,4.8873,27.58813-27.58813c10.78822-10.78822,28.36591-11.4491,39.44579-.96065A28.00039,28.00039,0,0,1,207.799,87.799Z"
+                  ></path>
+                  <path
+                    fill="none"
+                    stroke="#000"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="8"
+                    d="M158.62742,142.62742l-56,56a31.98729,31.98729,0,0,1-30.91154,8.28721L48.31361,217.131A8,8,0,0,1,39.456,215.456h0a5.74381,5.74381,0,0,1-1.20256-6.35955l10.832-24.81212a31.9873,31.9873,0,0,1,8.28715-30.91177l56-56"
+                  ></path>
+                </svg>
+              </button>
+            )}
 
-          {/* Right: Color Rings and Brightness Bar */}
-          {(layoutConfig.hasColorRings || layoutConfig.hasBrightnessBar) && (
-            <div
-              className="flex flex-col gap-3"
-              style={{ minWidth: size * 0.8 }}
-            >
-              {/* Color Rings */}
-              {layoutConfig.hasColorRings && (
-                <div className="flex flex-col gap-2">
-                  {/* Single row when brightness bar is present, two rows when it's not */}
-                  {layoutConfig.hasBrightnessBar ? (
-                    // One row with brightness bar
-                    <div className="flex gap-2 justify-center">
-                      {colorRingsPalette.slice(0, 8).map((hexColor, index) => {
-                        const isActive = isColorRingActive(hexColor);
-                        return (
-                          <button
-                            key={`single-row-${index}`}
-                            onClick={() => handleColorRingClick(hexColor)}
-                            className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
-                              isActive
-                                ? "border-gray-500 border-1 scale-110"
-                                : "border-gray-300 hover:border-gray-500"
-                            }`}
-                            style={{
-                              backgroundColor: hexColor,
-                            }}
-                            title={hexColor}
-                          />
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <>
+            {/* Right: Color Rings and Brightness Bar */}
+            {(layoutConfig.hasColorRings || layoutConfig.hasBrightnessBar) && (
+              <div
+                className="flex flex-col gap-3"
+                style={{ minWidth: size * 0.8 }}
+              >
+                {/* Color Rings */}
+                {layoutConfig.hasColorRings && (
+                  <div className="flex flex-col gap-2">
+                    {/* Single row when brightness bar is present, two rows when it's not */}
+                    {layoutConfig.hasBrightnessBar ? (
+                      // One row with brightness bar
                       <div className="flex gap-2 justify-center">
                         {colorRingsPalette
-                          .slice(0, Math.ceil(colorRingsPalette.length / 2))
+                          .slice(0, 8)
                           .map((hexColor, index) => {
                             const isActive = isColorRingActive(hexColor);
                             return (
                               <button
-                                key={`row1-${index}`}
+                                key={`single-row-${index}`}
                                 onClick={() => handleColorRingClick(hexColor)}
                                 className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
                                   isActive
-                                    ? "border-blue-500 border-4 scale-110"
+                                    ? "border-gray-500 border-1 scale-110"
                                     : "border-gray-300 hover:border-gray-500"
                                 }`}
-                                style={{ backgroundColor: hexColor }}
+                                style={{
+                                  backgroundColor: hexColor,
+                                }}
                                 title={hexColor}
                               />
                             );
                           })}
                       </div>
-                      <div className="flex gap-2 justify-center">
-                        {colorRingsPalette
-                          .slice(Math.ceil(colorRingsPalette.length / 2))
-                          .map((hexColor, index) => {
-                            const isActive = isColorRingActive(hexColor);
-                            return (
-                              <button
-                                key={`row2-${index}`}
-                                onClick={() => handleColorRingClick(hexColor)}
-                                className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
-                                  isActive
-                                    ? "border-blue-500 border-4 scale-110"
-                                    : "border-gray-300 hover:border-gray-500"
-                                }`}
-                                style={{ backgroundColor: hexColor }}
-                                title={hexColor}
-                              />
-                            );
-                          })}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
+                    ) : (
+                      <>
+                        <div className="flex gap-2 justify-center">
+                          {colorRingsPalette
+                            .slice(0, Math.ceil(colorRingsPalette.length / 2))
+                            .map((hexColor, index) => {
+                              const isActive = isColorRingActive(hexColor);
+                              return (
+                                <button
+                                  key={`row1-${index}`}
+                                  onClick={() => handleColorRingClick(hexColor)}
+                                  className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
+                                    isActive
+                                      ? "border-blue-500 border-4 scale-110"
+                                      : "border-gray-300 hover:border-gray-500"
+                                  }`}
+                                  style={{ backgroundColor: hexColor }}
+                                  title={hexColor}
+                                />
+                              );
+                            })}
+                        </div>
+                        <div className="flex gap-2 justify-center">
+                          {colorRingsPalette
+                            .slice(Math.ceil(colorRingsPalette.length / 2))
+                            .map((hexColor, index) => {
+                              const isActive = isColorRingActive(hexColor);
+                              return (
+                                <button
+                                  key={`row2-${index}`}
+                                  onClick={() => handleColorRingClick(hexColor)}
+                                  className={`w-6 h-6 rounded-full border-2 transition-all duration-200 hover:scale-110 shadow-sm ${
+                                    isActive
+                                      ? "border-blue-500 border-4 scale-110"
+                                      : "border-gray-300 hover:border-gray-500"
+                                  }`}
+                                  style={{ backgroundColor: hexColor }}
+                                  title={hexColor}
+                                />
+                              );
+                            })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
 
-              {/* Brightness Bar */}
-              {layoutConfig.hasBrightnessBar && (
-                <div className="relative">
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={color.v}
-                    onChange={handleBrightnessChange}
-                    className="w-full h-3 appearance-none rounded-lg cursor-pointer shadow-inner range-thumb"
-                    style={{
-                      background: `linear-gradient(to right, 
+                {/* Brightness Bar */}
+                {layoutConfig.hasBrightnessBar && (
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={color.v}
+                      onChange={handleBrightnessChange}
+                      className="w-full h-3 appearance-none rounded-lg cursor-pointer shadow-inner range-thumb"
+                      style={{
+                        background: `linear-gradient(to right, 
                         hsl(${color.h}, ${color.s * 100}%, 0%), 
                         hsl(${color.h}, ${color.s * 100}%, 50%), 
                         hsl(${color.h}, ${color.s * 100}%, 100%))`,
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

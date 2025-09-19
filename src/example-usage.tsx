@@ -21,7 +21,7 @@ export default function ColorPickerDemo() {
 
   return (
     <div
-      className="z-color-picker min-h-screen p-4 sm:p-8 flex items-center justify-center"
+      className="  min-h-screen p-4 sm:p-8 flex items-center justify-center"
       style={{
         transition: "background-color 0.3s ease",
         backgroundColor: `rgba(${selectedColor.r}, ${selectedColor.g}, ${selectedColor.b}, ${selectedColor.a})`,
