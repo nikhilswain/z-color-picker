@@ -58,6 +58,7 @@ export default function ColorPickerDemo() {
               <ZColorPicker
                 size={120}
                 initialColor={{ r: 100, g: 200, b: 255, a: 1 }}
+                formats={["rgba"]}
                 showEyedropper={true}
               />
             </div>
@@ -74,6 +75,7 @@ export default function ColorPickerDemo() {
               <ZColorPicker
                 size={120}
                 initialColor={{ r: 255, g: 100, b: 100, a: 1 }}
+                formats={["hex"]}
                 showEyedropper={true}
                 showColorRings={true}
               />
@@ -91,6 +93,7 @@ export default function ColorPickerDemo() {
               <ZColorPicker
                 size={120}
                 initialColor={{ r: 150, g: 255, b: 150, a: 1 }}
+                formats={["hsv"]}
                 showEyedropper={true}
                 showColorRings={true}
                 showBrightnessBar={true}

@@ -27,18 +27,20 @@ npm install @zzro/z-color-picker
 ## 🚀 Quick Start
 
 ```tsx
-import { ZColorPicker } from "@zzro/z-color-picker";
+import { ZColorPicker, type ZColorResult } from "@zzro/z-color-picker";
 import "@zzro/z-color-picker/styles"; // Import the CSS styles
 
 function App() {
-  const handleColorChange = (color) => {
-    console.log("Selected color:", color);
+  const handleColorChange = (color: ZColorResult<["rgba"]>) => {
+    // You get exactly what you specify in formats prop
+    console.log("RGBA:", color.rgba); // { r: 255, g: 100, b: 50, a: 1 }
   };
 
   return (
     <ZColorPicker
       size={300}
       initialColor={{ r: 255, g: 100, b: 50, a: 1 }}
+      formats={["rgba"]} // ✅ Required: explicitly specify what you want
       onChange={handleColorChange}
       showEyedropper={true}
       showBrightnessBar={true}
@@ -79,7 +81,7 @@ import "@zzro/z-color-picker/dist/z-color-picker.css";
 | `showColorRings`    | `boolean`                          | `false`                        | Show color preset rings            |
 | `pickerBgColor`     | `string`                           | `"#ffffff"`                    | Background color of the picker     |
 | `colorRingsPalette` | `string[]`                         | Default palette                | Custom color palette for rings     |
-| `formats`           | `ColorFormatType[]`                | `[]`                           | Output color formats               |
+| `formats`           | `ColorFormatType[]`                | **Required**                   | Output color formats               |
 
 ### Types
 
@@ -88,13 +90,17 @@ import "@zzro/z-color-picker/dist/z-color-picker.css";
 type ColorFormatType = "rgba" | "rgb" | "hex" | "hsl" | "hsla" | "hsv" | "hsva";
 
 // ZColorResult provides type-safe results based on formats
-type ZColorResult<T extends ColorFormatType[]> = /* ... */;
+// Always returns object format for consistency
+type ZColorResult<T extends ColorFormatType[]> = {
+  [K in T[number]]: ColorFormatResults[K];
+};
 
-// Component props type
+// Component props type with required formats
 interface ZColorPickerProps<T extends ColorFormatType[]> = {
   size?: number;
   onChange?: (color: ZColorResult<T>) => void;
   initialColor?: { r: number; g: number; b: number; a: number };
+  formats: T; // Required - you must specify what formats you want
   // ... other props
 };
 ```
@@ -115,8 +121,30 @@ import {
 ### Basic Usage
 
 ```tsx
-// Simple color picker (returns merged RGBA + HSVA object by default)
-<ZColorPicker onChange={(color) => console.log(color)} />
+// Specify exactly what format(s) you want - no guessing!
+<ZColorPicker
+  formats={["rgba"]}
+  onChange={(color: ZColorResult<["rgba"]>) => {
+    console.log(color.rgba); // { r: 255, g: 100, b: 50, a: 1 }
+  }}
+/>
+
+// Multiple formats
+<ZColorPicker
+  formats={["rgba", "hsv"]}
+  onChange={(color: ZColorResult<["rgba", "hsv"]>) => {
+    console.log(color.rgba); // { r: 255, g: 100, b: 50, a: 1 }
+    console.log(color.hsv);  // { h: 15, s: 80, v: 100 }
+  }}
+/>
+
+// With TypeScript for perfect type safety
+const handleColorChange = (color: ZColorResult<["rgba", "hsv"]>) => {
+  console.log("RGBA:", color.rgba);
+  console.log("HSV:", color.hsv);
+};
+
+<ZColorPicker formats={["rgba", "hsv"]} onChange={handleColorChange} />
 ```
 
 ### Single Format Output
@@ -125,13 +153,13 @@ import {
 // Hex string output
 <ZColorPicker
   formats={["hex"]}
-  onChange={(result) => console.log(result.hex)} // "#ff6432"
+  onChange={(result: ZColorResult<["hex"]>) => console.log(result.hex)} // "#ff6432"
 />
 
 // RGB object output
 <ZColorPicker
   formats={["rgb"]}
-  onChange={(result) => {
+  onChange={(result: ZColorResult<["rgb"]>) => {
     console.log(`RGB: ${result.rgb.r}, ${result.rgb.g}, ${result.rgb.b}`);
   }}
 />
@@ -139,7 +167,7 @@ import {
 // RGBA with alpha
 <ZColorPicker
   formats={["rgba"]}
-  onChange={(result) => {
+  onChange={(result: ZColorResult<["rgba"]>) => {
     const { r, g, b, a } = result.rgba;
     console.log(`RGBA: ${r}, ${g}, ${b}, ${a}`);
   }}
@@ -151,7 +179,7 @@ import {
 ```tsx
 <ZColorPicker
   formats={["hex", "rgb", "hsl"]}
-  onChange={(result) => {
+  onChange={(result: ZColorResult<["hex", "rgb", "hsl"]>) => {
     console.log(result.hex); // "#ff6432"
     console.log(result.rgb); // { r: 255, g: 100, b: 50 }
     console.log(result.hsl); // { h: 15, s: 80, l: 60 }
@@ -239,7 +267,7 @@ const handleHexColor = (result: ZColorResult<["hex"]>) => {
   size={280}
   initialColor={{ r: 255, g: 100, b: 50, a: 0.8 }}
   formats={["hex", "rgba"]}
-  onChange={(color) => {
+  onChange={(color: ZColorResult<["hex", "rgba"]>) => {
     console.log("Hex:", color.hex);
     console.log("RGBA:", color.rgba);
   }}
@@ -267,7 +295,8 @@ const customPalette = [
 <ZColorPicker
   showColorRings={true}
   colorRingsPalette={customPalette}
-  onChange={(color) => console.log(color)}
+  formats={["rgba"]}
+  onChange={(color: ZColorResult<["rgba"]>) => console.log(color)}
 />;
 ```
 
@@ -296,7 +325,7 @@ function ColorDemo() {
       <ZColorPicker
         initialColor={color}
         formats={["rgba"]}
-        onChange={(newColor) => setColor(newColor)}
+        onChange={(newColor: ZColorResult<["rgba"]>) => setColor(newColor.rgba)}
         showEyedropper={true}
         showBrightnessBar={true}
         showColorRings={true}
@@ -323,20 +352,6 @@ function ColorDemo() {
 | `"hsla"` | `{ h, s, l, a }` | `{ h: 15, s: 80, l: 60, a: 0.8 }`   | HSL with alpha           |
 | `"hsv"`  | `{ h, s, v }`    | `{ h: 15, s: 80, v: 100 }`          | HSV values               |
 | `"hsva"` | `{ h, s, v, a }` | `{ h: 15, s: 80, v: 100, a: 0.8 }`  | HSV with alpha           |
-
-### Default Behavior (No formats specified)
-
-When no `formats` prop is provided, the component returns a merged object with both RGBA and HSVA:
-
-```tsx
-<ZColorPicker
-  onChange={(color) => {
-    // color contains: { r, g, b, a, h, s, v }
-    console.log(color.r, color.g, color.b, color.a); // RGBA values
-    console.log(color.h, color.s, color.v); // HSV values
-  }}
-/>
-```
 
 ## 📱 Cross-Device Support
 
@@ -402,9 +417,9 @@ Override component styles with higher specificity:
 ```tsx
 import { ZColorPicker, type ZColorResult, type RGBAColor } from "@zzro/z-color-picker";
 
-// Single format - direct type
-const handleHexChange = (color: string) => {
-  console.log("Hex color:", color);
+// Single format - still returns object format
+const handleHexChange = (color: ZColorResult<["hex"]>) => {
+  console.log("Hex color:", color.hex); // Access .hex property
 };
 
 // Multiple formats - object type
