@@ -5,6 +5,98 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2025-09-23
+
+### 🚀 Major Improvement - Required Formats Prop
+
+#### Made `formats` Prop Required
+
+- **BREAKING**: The `formats` prop is now **required** for better type safety and clarity
+- **Eliminates confusion**: No more guessing what format the component will return
+- **Better developer experience**: Clear, predictable API with explicit format specification
+- **Improved TypeScript errors**: More helpful error messages when types don't match
+
+#### Benefits
+
+- **No more implicit defaults**: You explicitly choose what formats you want
+- **Type safety**: Handler types must match the specified formats exactly
+- **Clear intent**: Code is more readable and maintainable
+- **Better IntelliSense**: IDE provides better autocomplete and error detection
+
+### 🔄 Migration Guide
+
+#### Before (v2.0.2 and earlier)
+
+```tsx
+// This was confusing - formats defaulted to ["rgba", "hsva"]
+<ZColorPicker onChange={(color) => {
+  // TypeScript error if you expected different format
+  console.log(color.rgb); // ❌ Error: Property 'rgb' doesn't exist on type '{ rgba: RGBAColor; hsva: HSVAColor; }'
+}} />
+
+// The component would return { rgba: ..., hsva: ... } by default
+<ZColorPicker
+  // No formats prop = defaulted to ["rgba", "hsva"]
+  onChange={(color) => {
+    console.log(color.rgba); // ✅ This worked
+    console.log(color.hsva); // ✅ This worked
+    // But unclear to users what was available
+  }}
+/>
+```
+
+#### After (v2.2.0)
+
+```tsx
+// Now explicit and clear - you get exactly what you specify
+<ZColorPicker
+  formats={["rgb"]}  // ✅ Required: explicitly request RGB format
+  onChange={(color: ZColorResult<["rgb"]>) => {
+    console.log(color.rgb); // ✅ TypeScript knows this is { rgb: RGBColor }
+  }}
+/>
+
+// For the old default behavior, be explicit
+<ZColorPicker
+  formats={["rgba", "hsva"]}  // ✅ Explicit: same as old default
+  onChange={(color: ZColorResult<["rgba", "hsva"]>) => {
+    console.log(color.rgba); // ✅ Works perfectly
+    console.log(color.hsva); // ✅ Works perfectly
+  }}
+/>
+
+// Single format with proper typing
+<ZColorPicker
+  formats={["hex"]}
+  onChange={(color: ZColorResult<["hex"]>) => {
+    console.log(color.hex); // ✅ "string" - perfectly typed
+  }}
+/>
+```
+
+### 📖 Common Format Combinations
+
+```tsx
+// Most common: RGBA for full color with alpha
+<ZColorPicker formats={["rgba"]} onChange={(c) => c.rgba} />
+
+// Web colors: Hex for CSS
+<ZColorPicker formats={["hex"]} onChange={(c) => c.hex} />
+
+// Design tools: HSV for color wheels
+<ZColorPicker formats={["hsv"]} onChange={(c) => c.hsv} />
+
+// Multiple outputs: Get all formats you need
+<ZColorPicker
+  formats={["hex", "rgba", "hsl"]}
+  onChange={(c) => ({
+    hex: c.hex,
+    rgba: c.rgba,
+    hsl: c.hsl
+  })}
+/>
+```
+
 ## [2.0.0] - 2025-09-18
 
 ### 🚀 Major Changes

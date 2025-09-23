@@ -1,6 +1,6 @@
 {
   "name": "@zzro/z-color-picker",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "description": "An enhanced, performant, and cross-device compatible React color picker with HSV color space, eyedropper support, and flexible format output",
   "type": "module",
   "main": "./dist/z-color-picker.umd.cjs",

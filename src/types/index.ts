@@ -70,12 +70,12 @@ export interface ColorFormatResults {
 
 /**
  * Dynamic result type based on formats array
- * - Single or multiple formats: returns object with format keys
- * - No formats: returns default RGBA + HSVA merged object
+ * - Always returns object with format keys for consistency
+ * - formats prop is required, so no need to handle empty arrays
  */
-export type ZColorResult<T extends ColorFormatType[]> = T extends []
-  ? RGBAColor & HSVAColor // Default when no formats specified
-  : { [K in T[number]]: ColorFormatResults[K] };
+export type ZColorResult<T extends ColorFormatType[]> = {
+  [K in T[number]]: ColorFormatResults[K];
+};
 
 /**
  * Drag target types for color picker interactions
@@ -109,9 +109,9 @@ export type DragTarget = "color" | "alpha" | "value" | null;
  * - `showColorRings`: Whether to show color preset rings (default: true)
  * - `pickerBgColor`: Background color of the picker (default: #ffffff)
  * - `colorRingsPalette`: Custom color palette for the rings (default: preset colors)
- * - `formats`: Array of desired output formats, determines the return type of onChange (default: [])
+ * - `formats`: Array of desired output formats, determines the return type of onChange (REQUIRED)
  */
-export interface ZColorPickerProps<T extends ColorFormatType[] = []> {
+export interface ZColorPickerProps<T extends ColorFormatType[]> {
   /** Size of the color picker in pixels */
   size?: number;
   /** Callback fired when color changes */
@@ -128,8 +128,8 @@ export interface ZColorPickerProps<T extends ColorFormatType[] = []> {
   pickerBgColor?: string;
   /** Custom color for circular picker background */
   colorRingsPalette?: string[];
-  /** Output formats (determines return type) */
-  formats?: T;
+  /** Output formats (determines return type) - REQUIRED */
+  formats: T;
 }
 
 /**

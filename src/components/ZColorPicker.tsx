@@ -48,7 +48,7 @@ import {
  * />
  * ```
  */
-function ZColorPicker<T extends ColorFormatType[] = []>({
+function ZColorPicker<T extends ColorFormatType[]>({
   size = LAYOUT_CONSTANTS.DEFAULT_SIZE,
   onChange,
   initialColor = { r: 255, g: 0, b: 0, a: 1 },
@@ -57,7 +57,7 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
   showColorRings = false,
   pickerBgColor = "#ffffff",
   colorRingsPalette = [...DEFAULT_COLOR_PALETTE],
-  formats,
+  formats, // Now required, no default value
 }: ZColorPickerProps<T>) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wheelCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -284,18 +284,12 @@ function ZColorPicker<T extends ColorFormatType[] = []>({
         },
       };
 
-      // Return data based on formats prop
-      if (!formats || formats.length === 0) {
-        // Default: return RGBA + HSVA merged object (backward compatibility)
-        onChange?.({ ...newColor, r, g, b } as ZColorResult<T>);
-      } else {
-        // Always return object with format keys (single or multiple formats)
-        const result = {} as Record<string, unknown>;
-        formats.forEach((format) => {
-          result[format] = formatResults[format];
-        });
-        onChange?.(result as ZColorResult<T>);
-      }
+      // Always return object with format keys for consistency
+      const result = {} as Record<string, unknown>;
+      formats.forEach((format) => {
+        result[format] = formatResults[format];
+      });
+      onChange?.(result as ZColorResult<T>);
     },
     [onChange, formats]
   );
